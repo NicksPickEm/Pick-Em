@@ -1,0 +1,1941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nick's Pick Em</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#111827; --surface:#1e2a3a; --surface2:#263447; --border:#2e4060;
+    --accent:#38bdf8; --green:#34d399; --red:#f87171; --text:#e2e8f0;
+    --muted:#64748b; --gold:#fbbf24; --silver:#94a3b8; --bronze:#c47a3a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden}
+  .header{background:linear-gradient(90deg,#0f1e30,#172840 60%,#0f1e30);border-bottom:2px solid var(--accent);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(56,189,248,.15)}
+  .logo{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:var(--text);line-height:1}
+  .logo em{font-style:normal;color:var(--accent)}
+  .week-badge{background:var(--green);color:#0a1a12;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1.5px;padding:4px 12px;border-radius:20px;font-weight:700}
+  .nav{display:flex;overflow-x:auto;background:#162030;border-bottom:1px solid var(--border);scrollbar-width:none;padding:10px 12px;gap:6px}
+  .nav::-webkit-scrollbar{display:none}
+  .nav-btn{flex-shrink:0;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;padding:8px 16px;border-radius:8px;cursor:pointer;white-space:nowrap;transition:all .15s;letter-spacing:.3px}
+  .nav-btn.active{background:var(--accent);border-color:var(--accent);color:#0a1e2e;font-weight:700}
+  .nav-btn:hover:not(.active){border-color:var(--accent);color:var(--accent)}
+  .page{display:none;padding:16px}
+  .page.active{display:block}
+  .section-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2.5px;color:var(--accent);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+  .section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+  .stat-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
+  .stat-value{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--accent);line-height:1}
+  .stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:5px;font-weight:600}
+  .standings-table{width:100%;border-collapse:collapse;font-size:13px}
+  .standings-table th{text-align:left;color:var(--muted);font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:8px 10px;border-bottom:1px solid var(--border);font-weight:600}
+  .standings-table td{padding:11px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+  .standings-table tr:last-child td{border-bottom:none}
+  .standings-table tbody tr:hover td{background:var(--surface2)}
+  .rank-cell{font-family:'Bebas Neue',sans-serif;font-size:20px;width:36px;text-align:center}
+  .rank-1{color:var(--gold)} .rank-2{color:var(--silver)} .rank-3{color:var(--bronze)} .rank-other{color:var(--muted);font-size:14px}
+  .name-cell{font-weight:600;font-size:14px}
+  .pts-cell{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--accent);text-align:right}
+  .wins{color:var(--green);font-weight:700} .losses{color:var(--red);font-weight:700} .wl-cell{text-align:right;font-size:13px}
+  .week-selector{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .week-pill{background:var(--surface);border:1px solid var(--border);color:var(--muted);font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;cursor:pointer;transition:all .15s;letter-spacing:.3px}
+  .week-pill.active{background:var(--accent);border-color:var(--accent);color:#0a1e2e}
+  .week-pill:hover:not(.active){border-color:var(--accent);color:var(--accent)}
+  .picks-wrapper{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
+  .picks-grid{min-width:700px;border-collapse:separate;border-spacing:0;font-size:12px;width:100%}
+  .picks-grid th{background:var(--surface2);padding:8px;text-align:center;color:var(--muted);font-size:10px;letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid var(--border);border-right:1px solid var(--border);white-space:nowrap;font-weight:600;position:sticky;top:0;z-index:2}
+  .picks-grid th.name-col{text-align:left;position:sticky;left:0;background:var(--surface2);z-index:6;min-width:110px;max-width:110px;width:110px;border-right:2px solid var(--border) !important;-webkit-transform:translateZ(0);transform:translateZ(0)}
+  .picks-grid td{padding:6px 4px;text-align:center;border-bottom:1px solid var(--border);border-right:1px solid var(--border);white-space:nowrap;overflow:hidden;position:relative;vertical-align:middle}
+  .picks-grid td.name-col{text-align:left;position:sticky;left:0;background:var(--surface);z-index:5;font-weight:600;font-size:13px;min-width:110px;max-width:110px;width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-right:2px solid var(--border) !important;-webkit-transform:translateZ(0);transform:translateZ(0)}
+  .picks-grid tr:hover td{background:var(--surface2)}
+  .picks-grid tr:hover td.name-col{background:var(--surface2)}
+  .badge-wrap{position:relative;display:inline-block;margin:4px 4px 2px}
+  .team-badge{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:38px;height:34px;border-radius:5px;border-width:2px;border-style:solid;font-family:'Bebas Neue',sans-serif;line-height:1.1;text-align:center}
+  .team-badge .b-abbr{font-size:11px;letter-spacing:.3px}
+  .team-badge .b-nick{font-size:7px;opacity:.8;letter-spacing:.2px}
+  .badge-correct{box-shadow:0 0 0 2px var(--green)}
+  .badge-wrong{box-shadow:0 0 0 2px var(--red);opacity:.45}
+  .badge-check,.badge-x{position:absolute;top:-3px;right:-3px;width:11px;height:11px;border-radius:50%;font-size:7px;display:flex;align-items:center;justify-content:center;font-weight:900;line-height:1;z-index:1}
+  .badge-check{background:var(--green);color:#051a10}
+  .badge-x{background:var(--red);color:#1a0505}
+  .pts-col{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--accent);border-left:2px solid var(--border)!important}
+  .dbl{font-size:8px;color:var(--gold);display:block;letter-spacing:.5px;font-weight:700}
+  .winner-row td{background:rgba(56,189,248,.05)!important}
+  .winner-row td.name-col{background:rgba(56,189,248,.08)!important}
+  .pick-neutral{color:var(--muted);font-size:11px}
+  .dist-game{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px}
+  .dist-game-title{font-weight:600;font-size:13px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;color:var(--text)}
+  .dist-double-badge{background:var(--gold);color:#1a0e00;font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;letter-spacing:.8px}
+  .dist-split-row{display:flex;align-items:center;gap:10px}
+  .dist-split-team{flex-shrink:0;width:90px}
+  .fav-side{text-align:right} .dog-side{text-align:left}
+  .dist-split-name{font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dist-split-count{font-size:10px;color:var(--muted);margin-top:2px}
+  .dist-split-bar-wrap{flex:1}
+  .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px}
+  .chart-title{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1.5px;color:var(--accent);margin-bottom:14px}
+  .pure-bar-chart{display:flex;align-items:flex-end;gap:4px;height:160px;padding-bottom:20px;padding-top:20px;position:relative}
+  .pure-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end}
+  .pure-bar-val{font-family:'Bebas Neue',sans-serif;font-size:11px;margin-bottom:2px;white-space:nowrap}
+  .pure-bar-outer{width:100%;flex:1;display:flex;align-items:flex-end;background:var(--surface2);border-radius:3px 3px 0 0;overflow:hidden}
+  .pure-bar-inner{width:100%;border-radius:3px 3px 0 0;min-height:2px}
+  .pure-bar-label{font-size:8px;color:var(--muted);margin-top:3px;white-space:nowrap}
+  .pure-avg-line{position:absolute;left:0;right:0;height:0;border-top:1px dashed rgba(251,191,36,.7);pointer-events:none}
+  .player-back{color:var(--accent);font-size:13px;font-weight:600;cursor:pointer;margin-bottom:18px;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--border);border-radius:8px;transition:all .15s}
+  .player-back:hover{background:var(--surface2);border-color:var(--accent)}
+  .player-name{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;color:var(--text);line-height:1}
+  .player-rank{font-size:13px;color:var(--muted);margin-top:4px;margin-bottom:18px;font-weight:500}
+  .pstat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:6px}
+  .pstat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 10px;text-align:center}
+  .pstat-value{font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;color:var(--text)}
+  .pstat-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-top:4px;font-weight:600}
+  .name-link{cursor:pointer;color:var(--text);transition:color .15s}
+  .name-link:hover{color:var(--accent);text-decoration:underline}
+  .move-up{font-size:11px;font-weight:700;color:var(--green);letter-spacing:-.5px}
+  .move-down{font-size:11px;font-weight:700;color:var(--red);letter-spacing:-.5px}
+  .move-same{font-size:12px;color:var(--muted)}
+  .standings-meta{display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap}
+  .stat-pill{font-size:11px;font-weight:600;white-space:nowrap}
+  .profile-tabs{display:flex;gap:8px;margin-bottom:16px}
+  .profile-tab{flex:1;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+  .profile-tab.active{background:var(--accent);border-color:var(--accent);color:#0a1e2e}
+  .profile-tab:hover:not(.active){border-color:var(--accent);color:var(--accent)}
+  .bump-controls{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+  .bump-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;cursor:pointer;transition:all .15s}
+  .bump-btn.active{background:var(--accent);border-color:var(--accent);color:#0a1e2e}
+  .bump-btn:hover:not(.active){border-color:var(--accent);color:var(--accent)}
+  .bump-checklist{display:grid;grid-template-columns:1fr 1fr;gap:4px;max-height:200px;overflow-y:auto;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:14px}
+  .bump-check-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text);cursor:pointer;padding:3px 4px;border-radius:4px}
+  .bump-check-item:hover{background:var(--border)}
+  .bump-check-item input{accent-color:var(--accent);cursor:pointer}
+  .bump-done-btn{width:100%;margin-top:8px;padding:10px;background:var(--accent);border:none;border-radius:8px;color:#0a1e2e;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+  .admin-nav-btn{border-left:1px solid var(--border)!important;color:var(--muted)!important}
+  .admin-game-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border)}
+  .admin-game-num{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--muted);width:20px;flex-shrink:0}
+  .admin-team-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px 10px;font-size:13px;font-family:'Inter',sans-serif}
+  .admin-team-input:focus{outline:none;border-color:var(--accent)}
+  .admin-toggle{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;flex-shrink:0}
+  .admin-save-btn{width:100%;margin-top:18px;padding:12px;background:var(--accent);border:none;border-radius:8px;color:#0a1e2e;font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer}
+  .admin-result-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+  .admin-result-btn{flex:1;padding:10px 6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;text-align:center}
+  .admin-result-btn.selected{background:rgba(52,211,153,.15);border-color:var(--green);color:var(--green)}
+  .admin-result-btn:hover:not(.selected){border-color:var(--accent);color:var(--accent)}
+  ::-webkit-scrollbar{width:4px;height:4px}
+  ::-webkit-scrollbar-track{background:var(--bg)}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+  <div id="loading-overlay" style="display:none;position:fixed;inset:0;background:rgba(10,15,28,0.92);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+    <div style="width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite"></div>
+    <div style="color:var(--muted);font-size:13px;letter-spacing:1px">LOADING DATA...</div>
+  </div>
+  <div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 20px;border-radius:20px;font-size:13px;z-index:9998;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap"></div>
+
+<div class="header">
+  <div class="logo">NICK'S<em>PICK EM</em></div>
+  <div id="season-selector" style="display:flex;gap:6px;align-items:center;margin-right:8px"></div>
+  <div class="week-badge" id="week-badge">WEEK 7 LIVE</div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="showPage('standings',this)">Season Standings</button>
+  <button class="nav-btn" onclick="showPage('picks',this)">Weekly Picks</button>
+  <button class="nav-btn" onclick="showPage('distribution',this)">Pick Distribution</button>
+  <button class="nav-btn" onclick="showPage('charts',this)">Charts</button>
+  <button class="nav-btn admin-nav-btn" onclick="showAdminLogin(this)">&#9881; Admin</button>
+</div>
+
+<div class="page" id="page-player">
+  <div class="player-back" onclick="window.goBack()">&#8592; Back to Standings</div>
+  <div id="player-content"></div>
+</div>
+
+<div class="page active" id="page-standings">
+  <div class="section-title">Season Standings</div>
+  <div class="stat-row">
+    <div class="stat-card"><div class="stat-value">7</div><div class="stat-label">Weeks Complete</div></div>
+    <div class="stat-card"><div class="stat-value">54</div><div class="stat-label">Participants</div></div>
+  </div>
+  <table class="standings-table">
+    <thead><tr>
+      <th style="width:36px">#</th>
+      <th>Name</th>
+      <th style="text-align:right">W</th>
+      <th style="text-align:right">L</th>
+      <th style="text-align:right">PTS</th>
+    </tr></thead>
+    <tbody id="standings-body"></tbody>
+  </table>
+</div>
+
+<div class="page" id="page-picks">
+  <div class="section-title">Weekly Picks</div>
+  <div class="week-selector" id="week-selector"></div>
+  <div class="picks-wrapper">
+    <table class="picks-grid" id="picks-table"></table>
+  </div>
+</div>
+
+<div class="page" id="page-distribution">
+  <div class="section-title">Pick Distribution</div>
+  <div class="week-selector" id="dist-week-selector"></div>
+  <div id="dist-content"></div>
+</div>
+
+<div class="page" id="page-charts">
+  <div class="section-title">Charts &amp; Graphs</div>
+  <div class="chart-card">
+    <div class="chart-title">Weekly Consensus Accuracy</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px">% of picks that were correct each week</div>
+    <div id="chart-consensus"></div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">Points Per Week</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <select id="ppw-select" onchange="renderPPWChart()" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px 8px;font-size:12px;font-family:'Inter',sans-serif"></select>
+    </div>
+    <div id="chart-ppw"></div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">Weekly Winners</div>
+    <table class="standings-table" id="winners-table"></table>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">Season Standings by Week</div>
+    <div class="bump-controls">
+      <button class="bump-btn active" onclick="setBumpFilter('top15',this)">Top 15</button>
+      <button class="bump-btn" onclick="setBumpFilter('16-30',this)">16&ndash;30</button>
+      <button class="bump-btn" onclick="setBumpFilter('31-45',this)">31&ndash;45</button>
+      <button class="bump-btn" onclick="setBumpFilter('46plus',this)">46+</button>
+      <button class="bump-btn" onclick="setBumpFilter('custom',this)">Custom</button>
+    </div>
+    <div id="bump-checklist-wrap" style="display:none">
+      <div class="bump-checklist" id="bump-checklist"></div>
+      <button class="bump-done-btn" onclick="closeBumpChecklist()">Done &mdash; Show Chart</button>
+    </div>
+    <div id="chart-bump" style="min-height:480px"></div>
+  </div>
+</div>
+
+<!-- Admin Login Overlay -->
+<div id="admin-login-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1000;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:32px 28px;width:90%;max-width:340px">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--accent);margin-bottom:6px">Admin Access</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:20px">Enter password to continue</div>
+    <input id="admin-pw-input" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')checkAdminPw()"
+      style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px 12px;font-size:14px;font-family:'Inter',sans-serif;margin-bottom:10px;box-sizing:border-box">
+    <div id="admin-pw-error" style="color:var(--red);font-size:12px;min-height:16px;margin-bottom:10px"></div>
+    <button onclick="checkAdminPw()" style="width:100%;padding:11px;background:var(--accent);border:none;border-radius:8px;color:#0a1e2e;font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer">Enter</button>
+    <button onclick="closeAdminLogin()" style="width:100%;margin-top:8px;padding:10px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:'Inter',sans-serif;font-size:13px;cursor:pointer">Cancel</button>
+  </div>
+</div>
+
+<!-- Admin Page -->
+<div class="page" id="page-admin">
+  <div class="section-title">Admin Panel</div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+    <span style="font-size:13px;color:var(--muted);font-weight:600">WEEK</span>
+    <div id="admin-week-pills" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+  </div>
+  <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+    <button onclick="startNewSeason()" style="background:transparent;border:1px solid var(--gold);color:var(--gold);border-radius:8px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer">+ New Season</button>
+  </div>
+  <div style="display:none"><!-- spacer -->
+  </div>
+  <div class="profile-tabs" style="margin-bottom:20px">
+    <button class="profile-tab active" id="admin-tab-games-btn" onclick="switchAdminTab('games',this)">Games Setup</button>
+    <button class="profile-tab" id="admin-tab-picks-btn" onclick="switchAdminTab('picks',this)">Enter Picks</button>
+    <button class="profile-tab" id="admin-tab-results-btn" onclick="switchAdminTab('results',this)">Enter Results</button>
+    <button class="profile-tab" id="admin-tab-players-btn" onclick="switchAdminTab('players',this)">Players</button>
+  </div>
+  <div id="admin-tab-games">
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Set up the 13 games for this week. Mark the favorite and any 2PT games.</div>
+    <div id="admin-games-list"></div>
+    <button onclick="saveGamesSetup()" class="admin-save-btn">Save Games</button>
+  </div>
+  <div id="admin-tab-picks" style="display:none">
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Tap a cell to toggle between the two teams.</div>
+    <div style="overflow-x:auto"><table id="admin-picks-table" class="picks-grid"></table></div>
+    <button onclick="savePicksData()" class="admin-save-btn">Save Picks</button>
+  </div>
+  <div id="admin-tab-results" style="display:none">
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Select the winner of each game and enter the tiebreaker score.</div>
+    <div id="admin-results-list"></div>
+    <div id="admin-tb-wrap"></div>
+    <button onclick="saveResultsData()" class="admin-save-btn">Save Results</button>
+  </div>
+    <div id="admin-tab-players" style="display:none">
+      <div style="margin-bottom:16px">
+        <div style="font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Add Player</div>
+        <div style="display:flex;gap:8px">
+          <input id="new-player-input" type="text" placeholder="Full name (e.g. Nick S)" maxlength="30"
+            style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px 12px;font-size:14px;font-family:Inter,sans-serif"
+            onkeydown="if(event.key==='Enter')addPlayer()">
+          <button onclick="addPlayer()" style="background:var(--accent);color:#000;border:none;border-radius:8px;padding:10px 18px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap">+ Add</button>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Current Players (<span id="player-count">0</span>)</div>
+      <div id="players-list" style="display:flex;flex-direction:column;gap:6px"></div>
+      <button onclick="saveParticipantsToSheet()" style="margin-top:20px;width:100%;background:var(--green);color:#000;border:none;border-radius:10px;padding:14px;font-weight:700;font-size:14px;cursor:pointer">Save Players</button>
+    </div>
+  <div id="admin-save-msg" style="margin-top:14px;font-size:13px;color:var(--green);min-height:20px;text-align:center"></div>
+</div>
+
+<script>
+// Admin password check
+const ADMIN_PASS = 'admin123';
+let adminWeek = 7;
+let pendingPicks = {};
+let adminLastBtn = null;
+
+function showAdminLogin(btn) {
+  adminLastBtn = btn;
+  document.getElementById('admin-login-overlay').style.display = 'flex';
+  document.getElementById('admin-pw-input').value = '';
+  document.getElementById('admin-pw-error').textContent = '';
+  setTimeout(() => document.getElementById('admin-pw-input').focus(), 100);
+}
+
+function closeAdminLogin() {
+  document.getElementById('admin-login-overlay').style.display = 'none';
+}
+
+function checkAdminPw() {
+  const val = document.getElementById('admin-pw-input').value;
+  if (val === ADMIN_PASS) {
+    initAdminState();
+    closeAdminLogin();
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('page-admin').classList.add('active');
+    if (adminLastBtn) adminLastBtn.classList.add('active');
+    renderAdminWeekPills();
+    renderAdminTab('games');
+    renderPlayersList();
+  } else {
+    document.getElementById('admin-pw-error').textContent = 'Incorrect password.';
+    document.getElementById('admin-pw-input').value = '';
+  }
+}
+
+function renderAdminWeekPills() {
+  const container = document.getElementById('admin-week-pills');
+  container.innerHTML = Array.from({length: 14}, (_, i) => i + 1).map(w => {
+    const done = !!results[w];
+    return '<button class="week-pill' + (w === adminWeek ? ' active' : '') + '" onclick="setAdminWeek(' + w + ')">' +
+      'Wk ' + w + (done ? ' ✓' : '') + '</button>';
+  }).join('');
+}
+
+function setAdminWeek(w) {
+  adminWeek = w;
+  renderAdminWeekPills();
+  const activeTab = document.querySelector('.profile-tab.active')?.id?.replace('admin-tab-','')?.replace('-btn','') || 'games';
+  renderAdminTab(activeTab);
+}
+
+function switchAdminTab(tab, btn) {
+  ['games','picks','results','players'].forEach(t => {
+    const el = document.getElementById('admin-tab-' + t);
+    if (el) el.style.display = t === tab ? 'block' : 'none';
+  });
+  // Only update active state within the admin page
+  document.querySelectorAll('#page-admin .profile-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAdminTab(tab);
+}
+
+function renderAdminTab(tab) {
+  if (tab === 'games') renderAdminGames();
+  else if (tab === 'picks') renderAdminPicks();
+  else if (tab === 'results') renderAdminResults();
+  else if (tab === 'players') {
+    renderPlayersList();
+    // Force re-render after a tick in case DOM isn't ready
+    setTimeout(renderPlayersList, 50);
+  }
+}
+
+function renderAdminGames() {
+  const teamNames = Object.keys(FBS_TEAMS).sort();
+  const makeSelect = (id, current, gi, slot) => {
+    const opts = '<option value="">-- Select Team --</option>' +
+      teamNames.map(n => '<option value="' + n + '"' + (n === current ? ' selected' : '') + '>' + n + '</option>').join('');
+    return '<select id="' + id + '" onchange="onTeamChange(' + gi + ',' + slot + ')" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px 6px;font-size:12px;font-family:Inter,sans-serif;min-width:0">' + opts + '</select>';
+  };
+
+  let html = '';
+  for (let gi = 0; gi < 13; gi++) {
+    const weekGameData = sheetGames[adminWeek] || [];
+    const g = weekGameData[gi] || ['', ''];
+    const weekFavs = sheetFavorites[adminWeek] || favorites;
+    const weekDbls = sheetDoubleGames[adminWeek] || [];
+    const isFav0 = (weekFavs[gi] || 0) === 0;
+    const isDbl = weekDbls.includes(gi);
+    html += '<div style="margin-bottom:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px">' +
+      '<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">' +
+        '<span style="font-family:Bebas Neue,sans-serif;font-size:18px;color:var(--muted);width:20px;flex-shrink:0">' + (gi + 1) + '</span>' +
+        makeSelect('ag-t0-' + gi, g[0], gi, 0) +
+        '<span style="color:var(--muted);font-size:11px;font-weight:700;flex-shrink:0">vs</span>' +
+        makeSelect('ag-t1-' + gi, g[1], gi, 1) +
+      '</div>' +
+      '<div style="display:flex;gap:12px;padding-left:26px">' +
+        '<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--gold);cursor:pointer">' +
+          '<input type="checkbox" id="ag-fav-' + gi + '"' + (isFav0 ? ' checked' : '') + ' style="accent-color:var(--gold)"> Left team is favorite' +
+        '</label>' +
+        '<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--accent);cursor:pointer">' +
+          '<input type="checkbox" id="ag-dbl-' + gi + '"' + (isDbl ? ' checked' : '') + ' onchange="onDblChange(' + gi + ')" style="accent-color:var(--accent)"> 2PT game' +
+        '</label>' +
+      '</div>' +
+    '</div>';
+  }
+  document.getElementById('admin-games-list').innerHTML = html;
+}
+
+// Called whenever a 2PT checkbox changes
+window.onDblChange = function(gi) {
+  const checked = document.querySelectorAll('[id^="ag-dbl-"]:checked').length;
+  // If over limit, uncheck the one just clicked
+  if (checked > 3) {
+    document.getElementById('ag-dbl-' + gi).checked = false;
+    showAdminMsg('⚠️ Only 3 games can be 2-pointers.');
+    return;
+  }
+};
+
+// Called whenever a team dropdown changes - prevent duplicate teams
+window.onTeamChange = function(changedGi, changedSlot) {
+  const selectedVal = document.getElementById('ag-t' + changedSlot + '-' + changedGi).value;
+  if (!selectedVal) return;
+  // Collect all other selected teams
+  const usedElsewhere = [];
+  for (let gi = 0; gi < 13; gi++) {
+    for (let slot = 0; slot < 2; slot++) {
+      if (gi === changedGi && slot === changedSlot) continue;
+      const el = document.getElementById('ag-t' + slot + '-' + gi);
+      if (el && el.value === selectedVal) usedElsewhere.push(el);
+    }
+  }
+  if (usedElsewhere.length > 0) {
+    document.getElementById('ag-t' + changedSlot + '-' + changedGi).value = '';
+    showAdminMsg('⚠️ ' + selectedVal + ' is already used in another matchup.');
+  }
+};
+
+function saveGamesSetup() {
+  // Validate all teams selected
+  for (let gi = 0; gi < 13; gi++) {
+    const t0 = document.getElementById('ag-t0-' + gi).value;
+    const t1 = document.getElementById('ag-t1-' + gi).value;
+    if (!t0 || !t1) { showAdminMsg('⚠️ Game ' + (gi+1) + ' needs both teams selected.'); return; }
+    if (t0 === t1) { showAdminMsg('⚠️ Game ' + (gi+1) + ' has the same team twice.'); return; }
+  }
+  // Validate no duplicate teams across games
+  const allTeams = [];
+  for (let gi = 0; gi < 13; gi++) {
+    allTeams.push(document.getElementById('ag-t0-' + gi).value);
+    allTeams.push(document.getElementById('ag-t1-' + gi).value);
+  }
+  const dupes = allTeams.filter((t, i) => allTeams.indexOf(t) !== i);
+  if (dupes.length) { showAdminMsg('⚠️ Duplicate team: ' + [...new Set(dupes)].join(', ')); return; }
+  // Validate 2PT count
+  const dblCount = document.querySelectorAll('[id^="ag-dbl-"]:checked').length;
+  if (dblCount > 3) { showAdminMsg('⚠️ Max 3 two-point games allowed.'); return; }
+
+  // Commit
+  for (let gi = 0; gi < 13; gi++) {
+    games[gi] = [document.getElementById('ag-t0-' + gi).value, document.getElementById('ag-t1-' + gi).value];
+    favorites[gi] = document.getElementById('ag-fav-' + gi).checked ? 0 : 1;
+    const dblIdx = DOUBLE_GAMES.indexOf(gi);
+    if (document.getElementById('ag-dbl-' + gi).checked) {
+      if (dblIdx === -1) DOUBLE_GAMES.push(gi);
+    } else {
+      if (dblIdx > -1) DOUBLE_GAMES.splice(dblIdx, 1);
+    }
+  }
+  picks[adminWeek] = {};
+  participants.forEach(p => { picks[adminWeek][p] = Array(13).fill(null); });
+  results[adminWeek] = null;
+  showAdminMsg('✓ Games saved for Week ' + adminWeek + '! Picks reset.');
+  saveGamesToSheet(adminWeek);
+}
+
+function renderAdminPicks() {
+  const weekGames = games;
+  let thead = '<thead><tr><th class="name-col" style="position:sticky;left:0;z-index:3;background:var(--surface2)">Participant</th>';
+  weekGames.forEach(function(g, gi) {
+    var isDbl = DOUBLE_GAMES.includes(gi);
+    thead += '<th style="min-width:52px;font-size:10px">' + g[0].slice(0,4).toUpperCase() + '<br><span style="opacity:0.4">vs</span><br>' + g[1].slice(0,4).toUpperCase() + (isDbl ? '<span class="dbl">2PT</span>' : '') + '</th>';
+  });
+  thead += '<th style="min-width:52px;color:var(--gold);font-size:10px">TB<br>GUESS</th></tr></thead>';
+
+  var tbody = '<tbody>';
+  participants.forEach(function(p, pi) {
+    tbody += '<tr><td class="name-col" style="position:sticky;left:0;z-index:2;background:var(--surface)">' + p + '</td>';
+    weekGames.forEach(function(g, gi) {
+      var curPick = (picks[adminWeek] && picks[adminWeek][p] && picks[adminWeek][p][gi] !== null) ? picks[adminWeek][p][gi] : null;
+      tbody += '<td class="admin-pick-cell" data-pi="' + pi + '" data-gi="' + gi + '" onclick="toggleAdminPick(this)" style="cursor:pointer;padding:4px;text-align:center">' +
+        adminPickBadge(g, curPick) + '</td>';
+    });
+    var tbVal = (tbGuesses[adminWeek] && tbGuesses[adminWeek][p]) ? tbGuesses[adminWeek][p] : '';
+    tbody += '<td style="padding:4px"><input type="number" value="' + tbVal + '" min="0" max="150" data-pi="' + pi + '" ' +
+      'onchange="updateTbGuessIdx(' + pi + ',this.value)" ' +
+      'style="width:46px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--gold);font-family:Bebas Neue,sans-serif;font-size:14px;text-align:center;padding:4px 0"></td>';
+    tbody += '</tr>';
+  });
+  tbody += '</tbody>';
+  document.getElementById('admin-picks-table').innerHTML = thead + tbody;
+}
+
+window.updateTbGuessIdx = function(pi, val) {
+  var p = participants[pi];
+  if (!tbGuesses[adminWeek]) tbGuesses[adminWeek] = {};
+  tbGuesses[adminWeek][p] = parseInt(val) || 0;
+};
+
+
+function adminPickBadge(g, pick) {
+  if (pick === null || pick === undefined) {
+    return '<div style="width:38px;height:30px;border-radius:5px;border:1px dashed var(--border);margin:auto;display:flex;align-items:center;justify-content:center"><span style="color:var(--border);font-size:14px">+</span></div>';
+  }
+  var teamName = g[pick];
+  var t = FBS_TEAMS[teamName] || { abbr: teamName.slice(0,4).toUpperCase(), nick:'', bg: '#333', border: '#666', text: '#fff' };
+  return '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:38px;height:30px;border-radius:5px;border:2px solid ' + t.border + ';background:' + t.bg + ';color:' + t.text + ';font-family:Bebas Neue,sans-serif;font-size:10px;text-align:center;margin:auto">' +
+    '<span style="font-size:11px">' + t.abbr + '</span>' +
+    (t.nick ? '<span style="font-size:7px;opacity:0.8">' + t.nick.slice(0,6) + '</span>' : '') +
+  '</div>';
+}
+
+function toggleAdminPick(cell) {
+  var pi = parseInt(cell.dataset.pi);
+  var gi = parseInt(cell.dataset.gi);
+  var p = participants[pi];
+  if (!picks[adminWeek]) picks[adminWeek] = {};
+  if (!picks[adminWeek][p]) picks[adminWeek][p] = Array(13).fill(null);
+  var cur = picks[adminWeek][p][gi];
+  var next = (cur === null) ? 0 : (cur === 0) ? 1 : null;
+  picks[adminWeek][p][gi] = next;
+  cell.innerHTML = adminPickBadge(games[gi], next);
+}
+
+
+
+function savePicksData() {
+  showAdminMsg('Picks saved for Week ' + adminWeek + '!');
+  savePicksToSheet(adminWeek);
+}
+
+function renderAdminResults() {
+  const weekGames = games;
+  let html = '';
+  weekGames.forEach((g, gi) => {
+    const isDbl = DOUBLE_GAMES.includes(gi);
+    html += '<div class="admin-result-row">' +
+      '<span class="admin-game-num">' + (gi + 1) + (isDbl ? ' <span style="color:var(--accent);font-size:10px">2PT</span>' : '') + '</span>' +
+      '<div style="display:flex;gap:8px;flex:1">' +
+        '<button class="admin-result-btn" onclick="setResult(' + gi + ',0,this)">' + g[0] + '</button>' +
+        '<button class="admin-result-btn" onclick="setResult(' + gi + ',1,this)">' + g[1] + '</button>' +
+      '</div>' +
+    '</div>';
+  });
+  document.getElementById('admin-results-list').innerHTML = html;
+
+  // Tiebreaker - show which game it's for (last game)
+  const tbGame = games[games.length - 1];
+  const tbGameLabel = tbGame ? tbGame[0] + ' vs ' + tbGame[1] : 'Final Game';
+  const tbCur = tbActual[adminWeek] || '';
+  document.getElementById('admin-tb-wrap').innerHTML =
+    '<div style="margin:16px 0;background:var(--surface);border:1px solid var(--gold);border-radius:10px;padding:14px">' +
+      '<div style="font-size:10px;font-weight:700;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Tiebreaker</div>' +
+      '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px">' + tbGameLabel + '</div>' +
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:8px">Enter actual combined score</div>' +
+      '<input id="admin-tb-actual" type="number" placeholder="e.g. 47" min="0" max="150" value="' + tbCur + '"' +
+        ' style="width:120px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--gold);padding:10px 12px;font-size:20px;font-family:Bebas Neue,sans-serif;text-align:center">' +
+    '</div>';
+}
+
+function setResult(gi, winner, btn) {
+  if (!results[adminWeek]) results[adminWeek] = Array(13).fill(null);
+  results[adminWeek][gi] = winner;
+  // Update button styles
+  const row = btn.closest('.admin-result-row');
+  row.querySelectorAll('.admin-result-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+function saveResultsData() {
+  const tbVal = document.getElementById('admin-tb-actual').value;
+  if (tbVal) tbActual[adminWeek] = parseInt(tbVal);
+  // Recompute standings
+  showAdminMsg('Results saved for Week ' + adminWeek + '!');
+  saveResultsToSheet(adminWeek);
+}
+
+function showAdminMsg(msg) {
+  const el = document.getElementById('admin-save-msg');
+  el.textContent = msg;
+  setTimeout(() => { el.textContent = ''; }, 3000);
+}
+
+function renderPlayersList() {
+  const list = document.getElementById('players-list');
+  const count = document.getElementById('player-count');
+  if (!list || !count) return;
+  count.textContent = participants.length;
+  if (participants.length === 0) {
+    list.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:12px 0">No players yet. Add some above.</div>';
+    return;
+  }
+  list.innerHTML = participants.map((p, i) =>
+    '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:4px">' +
+      '<span style="font-weight:600;font-size:14px">' + p + '</span>' +
+      '<button onclick="removePlayer(' + i + ')" style="background:transparent;border:1px solid var(--red);color:var(--red);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;font-weight:700">✕</button>' +
+    '</div>'
+  ).join('');
+}
+
+window.addPlayer = function() {
+  const input = document.getElementById('new-player-input');
+  const name = input.value.trim();
+  if (!name) return;
+  if (participants.includes(name)) {
+    showToast('⚠️ ' + name + ' is already in the list.');
+    return;
+  }
+  participants.push(name);
+  input.value = '';
+  renderPlayersList();
+  showToast('Added ' + name);
+};
+
+window.removePlayer = function(i) {
+  const name = participants[i];
+  if (!confirm('Remove ' + name + ' from the league? This cannot be undone.')) return;
+  participants.splice(i, 1);
+  renderPlayersList();
+  showToast('Removed ' + name);
+};
+
+function saveParticipantsToSheet() {
+  apiCall({
+    action: 'saveParticipants',
+    season: CURRENT_SEASON,
+    data: { participants }
+  }, d => {
+    showToast(d ? '✓ Players saved to sheet' : '⚠️ Sheet save failed');
+    showAdminMsg(d ? '✓ Players saved!' : '⚠️ Save failed');
+  });
+}
+
+
+
+// Full FBS team library - colors, abbreviations, nicknames
+const FBS_TEAMS = {
+  // ACC
+  "Boston College":    { abbr: "BC",   nick: "EAGLES",  bg: "#8b0000", border: "#c8a900", text: "#fff" },
+  "California":        { abbr: "CAL",  nick: "BEARS",   bg: "#003262", border: "#fdb515", text: "#fdb515" },
+  "Clemson":           { abbr: "CLEM", nick: "TIGERS",  bg: "#f56600", border: "#522d80", text: "#fff" },
+  "Duke":              { abbr: "DUKE", nick: "DEVILS",  bg: "#003087", border: "#001a57", text: "#fff" },
+  "Florida State":     { abbr: "FSU",  nick: "NOLES",   bg: "#782f40", border: "#ceb888", text: "#ceb888" },
+  "Georgia Tech":      { abbr: "GT",   nick: "JACKETS", bg: "#b3a369", border: "#003057", text: "#003057" },
+  "Louisville":        { abbr: "LOU",  nick: "CARDS",   bg: "#ad0000", border: "#000", text: "#fff" },
+  "Miami":             { abbr: "MIA",  nick: "CANES",   bg: "#005030", border: "#f47321", text: "#f47321" },
+  "NC State":          { abbr: "NCST", nick: "PACK",    bg: "#cc0000", border: "#fff", text: "#fff" },
+  "North Carolina":    { abbr: "UNC",  nick: "HEELS",   bg: "#4b9cd3", border: "#13294b", text: "#fff" },
+  "Pittsburgh":        { abbr: "PITT", nick: "PANTHERS",bg: "#003594", border: "#ffb81c", text: "#ffb81c" },
+  "SMU":               { abbr: "SMU",  nick: "MUSTANGS",bg: "#354ca1", border: "#c8102e", text: "#fff" },
+  "Stanford":          { abbr: "STAN", nick: "CARDINAL",bg: "#8c1515", border: "#b6985a", text: "#fff" },
+  "Syracuse":          { abbr: "SYR",  nick: "ORANGE",  bg: "#f76900", border: "#fff", text: "#fff" },
+  "Virginia":          { abbr: "UVA",  nick: "HOOS",    bg: "#232d4b", border: "#f84c1e", text: "#f84c1e" },
+  "Virginia Tech":     { abbr: "VT",   nick: "HOKIES",  bg: "#660000", border: "#cf4420", text: "#fff" },
+  "Wake Forest":       { abbr: "WAKE", nick: "DEACS",   bg: "#9e7e38", border: "#000", text: "#000" },
+  // American
+  "Army":              { abbr: "ARMY", nick: "BLACK KN",bg: "#000", border: "#d4af37", text: "#d4af37" },
+  "Charlotte":         { abbr: "CLT",  nick: "49ERS",   bg: "#046a38", border: "#b9975b", text: "#b9975b" },
+  "East Carolina":     { abbr: "ECU",  nick: "PIRATES", bg: "#592a8a", border: "#ffc82e", text: "#ffc82e" },
+  "Florida Atlantic":  { abbr: "FAU",  nick: "OWLS",    bg: "#003366", border: "#cc0000", text: "#cc0000" },
+  "Memphis":           { abbr: "MEM",  nick: "TIGERS",  bg: "#003087", border: "#898d8d", text: "#fff" },
+  "Navy":              { abbr: "NAVY", nick: "MIDS",    bg: "#00205b", border: "#b1985a", text: "#b1985a" },
+  "North Texas":       { abbr: "UNT",  nick: "MEAN GRN",bg: "#00853e", border: "#fff", text: "#fff" },
+  "Rice":              { abbr: "RICE", nick: "OWLS",    bg: "#002469", border: "#a0a0a0", text: "#c1c6c8" },
+  "Temple":            { abbr: "TEMP", nick: "OWLS",    bg: "#9d2235", border: "#fff", text: "#fff" },
+  "Tulane":            { abbr: "TUL",  nick: "GREEN WV",bg: "#006341", border: "#418fde", text: "#fff" },
+  "Tulsa":             { abbr: "TLSA", nick: "GOLDEN H",bg: "#002d62", border: "#c8992a", text: "#c8992a" },
+  "UAB":               { abbr: "UAB",  nick: "BLAZERS", bg: "#1e6b52", border: "#f4c300", text: "#f4c300" },
+  "USF":               { abbr: "USF",  nick: "BULLS",   bg: "#006747", border: "#cfc493", text: "#cfc493" },
+  "UTSA":              { abbr: "UTSA", nick: "BIRDS",   bg: "#0c2340", border: "#f15a22", text: "#f15a22" },
+  // Big 12
+  "Arizona":           { abbr: "ARIZ", nick: "CATS",    bg: "#003366", border: "#cc0033", text: "#cc0033" },
+  "Arizona State":     { abbr: "ASU",  nick: "SUN DEVS",bg: "#8c1d40", border: "#ffc627", text: "#ffc627" },
+  "Baylor":            { abbr: "BAY",  nick: "BEARS",   bg: "#003015", border: "#ffb81c", text: "#ffb81c" },
+  "BYU":               { abbr: "BYU",  nick: "COUGARS", bg: "#002e5d", border: "#ffffff", text: "#fff" },
+  "Cincinnati":        { abbr: "CIN",  nick: "BEARCATS",bg: "#e00122", border: "#000", text: "#fff" },
+  "Colorado":          { abbr: "COL",  nick: "BUFFS",   bg: "#cfb87c", border: "#000", text: "#000" },
+  "Houston":           { abbr: "HOU",  nick: "COOGS",   bg: "#cc0000", border: "#fff", text: "#fff" },
+  "Iowa State":        { abbr: "ISU",  nick: "CYCLONES",bg: "#c8102e", border: "#f1be48", text: "#f1be48" },
+  "Kansas":            { abbr: "KU",   nick: "HAWKS",   bg: "#0051a5", border: "#e8000d", text: "#fff" },
+  "Kansas State":      { abbr: "KSU",  nick: "WILDCATS",bg: "#512888", border: "#a7a9ac", text: "#fff" },
+  "Oklahoma State":    { abbr: "OKST", nick: "COWBOYS", bg: "#ff6600", border: "#000", text: "#000" },
+  "TCU":               { abbr: "TCU",  nick: "HORNED F",bg: "#4d1979", border: "#a3a9ac", text: "#fff" },
+  "Texas Tech":        { abbr: "TTU",  nick: "RED RAID",bg: "#cc0000", border: "#000", text: "#fff" },
+  "UCF":               { abbr: "UCF",  nick: "KNIGHTS", bg: "#000", border: "#ba9b37", text: "#ba9b37" },
+  "Utah":              { abbr: "UTAH", nick: "UTES",    bg: "#cc0000", border: "#000", text: "#fff" },
+  "West Virginia":     { abbr: "WVU",  nick: "MNTNEERS",bg: "#002855", border: "#eaaa00", text: "#eaaa00" },
+  // Big Ten
+  "Illinois":          { abbr: "ILL",  nick: "ILLINI",  bg: "#13294b", border: "#e84a27", text: "#e84a27" },
+  "Indiana":           { abbr: "IU",   nick: "HOOSIERS",bg: "#990000", border: "#ccc", text: "#fff" },
+  "Iowa":              { abbr: "IOWA", nick: "HAWKEYES",bg: "#ffcd00", border: "#000", text: "#000" },
+  "Maryland":          { abbr: "UMD",  nick: "TERPS",   bg: "#e03a3e", border: "#ffd520", text: "#ffd520" },
+  "Michigan":          { abbr: "MICH", nick: "WOLVERNS",bg: "#00274c", border: "#ffcb05", text: "#ffcb05" },
+  "Michigan State":    { abbr: "MSU",  nick: "SPARTANS",bg: "#18453b", border: "#fff", text: "#fff" },
+  "Minnesota":         { abbr: "MINN", nick: "GOPHERS", bg: "#7a0019", border: "#ffcc33", text: "#ffcc33" },
+  "Nebraska":          { abbr: "NEB",  nick: "HUSKERS", bg: "#e41c38", border: "#fff", text: "#fff" },
+  "Northwestern":      { abbr: "NW",   nick: "WILDCATS",bg: "#4e2a84", border: "#fff", text: "#fff" },
+  "Ohio State":        { abbr: "OSU",  nick: "BUCKEYES",bg: "#bb0000", border: "#666", text: "#fff" },
+  "Oregon":            { abbr: "ORE",  nick: "DUCKS",   bg: "#154733", border: "#fed331", text: "#fed331" },
+  "Penn State":        { abbr: "PSU",  nick: "NITTNYLNS",bg: "#041e42", border: "#fff", text: "#fff" },
+  "Purdue":            { abbr: "PUR",  nick: "BOILRMKRS",bg: "#cfb991", border: "#000", text: "#000" },
+  "Rutgers":           { abbr: "RU",   nick: "SCARLET K",bg: "#cc0033", border: "#000", text: "#fff" },
+  "UCLA":              { abbr: "UCLA", nick: "BRUINS",  bg: "#2d68c4", border: "#f2a900", text: "#fff" },
+  "USC":               { abbr: "USC",  nick: "TROJANS", bg: "#990000", border: "#ffc72c", text: "#ffc72c" },
+  "Washington":        { abbr: "WASH", nick: "HUSKIES", bg: "#4b2e83", border: "#b7a57a", text: "#fff" },
+  "Wisconsin":         { abbr: "WISC", nick: "BADGERS", bg: "#c5050c", border: "#fff", text: "#fff" },
+  // CUSA
+  "Delaware":          { abbr: "DEL",  nick: "HENS",    bg: "#00539f", border: "#ffd200", text: "#ffd200" },
+  "FIU":               { abbr: "FIU",  nick: "PANTHERS",bg: "#081e3f", border: "#b6862c", text: "#b6862c" },
+  "Jacksonville State":{ abbr: "JSU",  nick: "GAMECKS", bg: "#d01c2a", border: "#fff", text: "#fff" },
+  "Kennesaw State":    { abbr: "KSU",  nick: "OWLS",    bg: "#fdbb30", border: "#000", text: "#000" },
+  "Liberty":           { abbr: "LIB",  nick: "FLAMES",  bg: "#002868", border: "#c41230", text: "#c41230" },
+  "Middle Tennessee":  { abbr: "MTSU", nick: "BLUE RDR",bg: "#0066cc", border: "#fff", text: "#fff" },
+  "Missouri State":    { abbr: "MOST", nick: "BEARS",   bg: "#4e1d22", border: "#a41e35", text: "#fff" },
+  "New Mexico State":  { abbr: "NMSU", nick: "AGGIES",  bg: "#861f41", border: "#fff", text: "#fff" },
+  "Sam Houston":       { abbr: "SHSU", nick: "BEARKATS",bg: "#f77f00", border: "#231f20", text: "#231f20" },
+  "UTEP":              { abbr: "UTEP", nick: "MINERS",  bg: "#041e42", border: "#ff8200", text: "#ff8200" },
+  "Western Kentucky":  { abbr: "WKU",  nick: "HILLTPRS",bg: "#c60c30", border: "#fff", text: "#fff" },
+  // MAC
+  "Akron":             { abbr: "AKR",  nick: "ZIPS",    bg: "#041e42", border: "#a89968", text: "#a89968" },
+  "Ball State":        { abbr: "BSU",  nick: "CARDS",   bg: "#ba0c2f", border: "#ccc", text: "#fff" },
+  "Bowling Green":     { abbr: "BGSU", nick: "FALCONS", bg: "#4f2c1d", border: "#f56600", text: "#f56600" },
+  "Buffalo":           { abbr: "BUFF", nick: "BULLS",   bg: "#005bbb", border: "#fff", text: "#fff" },
+  "Central Michigan":  { abbr: "CMU",  nick: "CHIPPWAS",bg: "#6a0032", border: "#ffc82e", text: "#ffc82e" },
+  "Eastern Michigan":  { abbr: "EMU",  nick: "EAGLES",  bg: "#046a38", border: "#fff", text: "#fff" },
+  "Kent State":        { abbr: "KENT", nick: "GOLDEN F",bg: "#002664", border: "#eaab00", text: "#eaab00" },
+  "Miami (OH)":        { abbr: "MIA",  nick: "REDHAWKS",bg: "#b61e2e", border: "#fff", text: "#fff" },
+  "Northern Illinois": { abbr: "NIU",  nick: "HUSKIES", bg: "#c8102e", border: "#000", text: "#fff" },
+  "Ohio":              { abbr: "OHIO", nick: "BOBCATS", bg: "#00694e", border: "#cfc493", text: "#cfc493" },
+  "Toledo":            { abbr: "TOL",  nick: "ROCKETS", bg: "#003087", border: "#ffb81c", text: "#ffb81c" },
+  "UMass":             { abbr: "UMASS","nick": "MINUTEMN",bg: "#971b2f", border: "#ccc", text: "#fff" },
+  "Western Michigan":  { abbr: "WMU",  nick: "BRONCOS", bg: "#6c4023", border: "#c5960c", text: "#c5960c" },
+  // Mountain West
+  "Air Force":         { abbr: "AF",   nick: "FALCONS", bg: "#003087", border: "#8a8d8f", text: "#8a8d8f" },
+  "Boise State":       { abbr: "BSU",  nick: "BRONCOS", bg: "#d64309", border: "#0033a0", text: "#fff" },
+  "Colorado State":    { abbr: "CSU",  nick: "RAMS",    bg: "#1e4d2b", border: "#c8c372", text: "#c8c372" },
+  "Fresno State":      { abbr: "FRES", nick: "BULLDOGS",bg: "#db0032", border: "#231f20", text: "#fff" },
+  "Hawaii":            { abbr: "HAW",  nick: "WARRIORS",bg: "#024731", border: "#c8a900", text: "#c8a900" },
+  "Nevada":            { abbr: "NEV",  nick: "WOLFPACK",bg: "#003366", border: "#807f77", text: "#807f77" },
+  "New Mexico":        { abbr: "UNM",  nick: "LOBOS",   bg: "#ba0c2f", border: "#a99062", text: "#a99062" },
+  "San Diego State":   { abbr: "SDSU", nick: "AZTECS",  bg: "#a6192e", border: "#000", text: "#fff" },
+  "San Jose State":    { abbr: "SJSU", nick: "SPARTANS",bg: "#0055a2", border: "#e5a823", text: "#e5a823" },
+  "UNLV":              { abbr: "UNLV", nick: "REBELS",  bg: "#cf0a2c", border: "#706f6f", text: "#fff" },
+  "Utah State":        { abbr: "USU",  nick: "AGGIES",  bg: "#00263a", border: "#8b93c6", text: "#8b93c6" },
+  "Wyoming":           { abbr: "WYO",  nick: "COWBOYS", bg: "#492f24", border: "#ffc425", text: "#ffc425" },
+  // SEC
+  "Alabama":           { abbr: "ALA",  nick: "TIDE",    bg: "#9e1b32", border: "#820000", text: "#fff" },
+  "Arkansas":          { abbr: "ARK",  nick: "HOGS",    bg: "#9d2235", border: "#ffcb05", text: "#ffcb05" },
+  "Auburn":            { abbr: "AUB",  nick: "TIGERS",  bg: "#03244d", border: "#e87722", text: "#e87722" },
+  "Florida":           { abbr: "FLA",  nick: "GATORS",  bg: "#0021a5", border: "#fa4616", text: "#fa4616" },
+  "Georgia":           { abbr: "UGA",  nick: "BULLDOGS",bg: "#ba0c2f", border: "#000", text: "#fff" },
+  "Kentucky":          { abbr: "UK",   nick: "WILDCATS",bg: "#0033a0", border: "#fff", text: "#fff" },
+  "LSU":               { abbr: "LSU",  nick: "TIGERS",  bg: "#461d7c", border: "#fdd023", text: "#fdd023" },
+  "Mississippi State": { abbr: "MSST", nick: "BULLDOGS",bg: "#660000", border: "#5d4b20", text: "#fff" },
+  "Missouri":          { abbr: "MIZZ", nick: "TIGERS",  bg: "#f1b82d", border: "#000", text: "#000" },
+  "Oklahoma":          { abbr: "OU",   nick: "SOONERS", bg: "#841617", border: "#fff", text: "#fff" },
+  "Ole Miss":          { abbr: "MISS", nick: "REBELS",  bg: "#ce1126", border: "#14213d", text: "#fff" },
+  "South Carolina":    { abbr: "SC",   nick: "GAMECKS", bg: "#73000a", border: "#000", text: "#fff" },
+  "Tennessee":         { abbr: "TENN", nick: "VOLS",    bg: "#ff8200", border: "#fff", text: "#fff" },
+  "Texas":             { abbr: "TEX",  nick: "LONGHRNS",bg: "#bf5700", border: "#fff", text: "#fff" },
+  "Texas A&M":         { abbr: "TAMU", nick: "AGGIES",  bg: "#500000", border: "#fff", text: "#fff" },
+  "Vanderbilt":        { abbr: "VAND", nick: "COMMODRS",bg: "#866d4b", border: "#000", text: "#000" },
+  // Sun Belt
+  "App State":         { abbr: "APP",  nick: "MNTNEERS",bg: "#000", border: "#ffcc00", text: "#ffcc00" },
+  "Arkansas State":    { abbr: "ARST", nick: "RED WOLVS",bg: "#cc0000", border: "#000", text: "#fff" },
+  "Coastal Carolina":  { abbr: "CCU",  nick: "CHANTS",  bg: "#006f71", border: "#a27752", text: "#a27752" },
+  "Georgia Southern":  { abbr: "GSU",  nick: "EAGLES",  bg: "#012169", border: "#866d4b", text: "#866d4b" },
+  "Georgia State":     { abbr: "GAST", nick: "PANTHERS",bg: "#0039a6", border: "#cc0000", text: "#cc0000" },
+  "James Madison":     { abbr: "JMU",  nick: "DUKES",   bg: "#450084", border: "#cbab3a", text: "#cbab3a" },
+  "Louisiana":         { abbr: "ULL",  nick: "CAJUNS",  bg: "#ce181e", border: "#231f20", text: "#fff" },
+  "Louisiana Monroe":  { abbr: "ULM",  nick: "WARHAWKS",bg: "#840028", border: "#c8a900", text: "#c8a900" },
+  "Marshall":          { abbr: "MRSH", nick: "THUNDER H",bg: "#00b140", border: "#000", text: "#000" },
+  "Old Dominion":      { abbr: "ODU",  nick: "MONARCHS",bg: "#003087", border: "#a4b0b7", text: "#a4b0b7" },
+  "South Alabama":     { abbr: "USA",  nick: "JAGUARS", bg: "#00205b", border: "#c8102e", text: "#c8102e" },
+  "Southern Miss":     { abbr: "USM",  nick: "EAGLES",  bg: "#000", border: "#ffc72c", text: "#ffc72c" },
+  "Texas State":       { abbr: "TXST", nick: "BOBCATS", bg: "#461d7c", border: "#999", text: "#fff" },
+  "Troy":              { abbr: "TROY", nick: "TROJANS", bg: "#8b0000", border: "#808080", text: "#fff" },
+  // Independents
+  "Notre Dame":        { abbr: "ND",   nick: "IRISH",   bg: "#0c2340", border: "#c99700", text: "#c99700" },
+};
+
+function teamBadge(teamName, status) {
+  const t = FBS_TEAMS[teamName] || { abbr: teamName.slice(0,4).toUpperCase(), nick: '', bg: '#333', border: '#666', text: '#fff' };
+  const borderColor = status === 'correct' ? '#34d399' : status === 'wrong' ? '#f87171' : t.border;
+  const opacity = status === 'wrong' ? '0.5' : '1';
+  const indicator = status === 'correct' ? '<div style="font-size:9px;color:#34d399;line-height:1;margin-top:1px">✓</div>' 
+                  : status === 'wrong'   ? '<div style="font-size:9px;color:#f87171;line-height:1;margin-top:1px">✗</div>' 
+                  : '';
+  return `<div style="display:inline-flex;flex-direction:column;align-items:center;opacity:${opacity}">
+    <div style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:36px;height:30px;border-radius:4px;border:2px solid ${borderColor};background:${t.bg};color:${t.text};font-family:Bebas Neue,sans-serif;line-height:1.1;text-align:center">
+      <span style="font-size:11px;letter-spacing:0.3px">${t.abbr}</span>
+      ${t.nick ? `<span style="font-size:7px;opacity:0.8">${t.nick.slice(0,6)}</span>` : ''}
+    </div>${indicator}</div>`;
+}
+
+const WEEKS = 7;
+const CURRENT_WEEK = 7;
+let CURRENT_SEASON = new Date().getFullYear();
+let activeSeason = CURRENT_SEASON; // which season is being viewed
+let availableSeasons = [CURRENT_SEASON]; // all seasons in sheet
+let adminGamesLoaded = false;
+let sheetGames = {};
+let sheetFavorites = {};
+let sheetDoubleGames = {};
+const DOUBLE_GAMES = [0, 1, 2];
+
+// Admin pending state (initialized after data is ready)
+let pendingGames, pendingFavorites, pendingDoubleGames;
+function initAdminState() {
+  pendingGames = JSON.parse(JSON.stringify(games));
+  pendingFavorites = [...favorites];
+  pendingDoubleGames = [...DOUBLE_GAMES];
+}
+
+const participants = [
+  "Mike T","Sarah K","Jake R","Laura M","Dave P",
+  "Chris B","Anna W","Tom S","Jessica L","Brian C",
+  "Rachel G","Kevin D","Amanda F","Steve H","Nicole J"
+];
+
+const games = [
+  ["Alabama","Georgia"],["Ohio St","Michigan"],["Texas","Oklahoma"],
+  ["LSU","Auburn"],["USC","UCLA"],["Florida","Tennessee"],
+  ["Notre Dame","Miami"],["Penn St","Iowa"],["Clemson","NC State"],
+  ["Oregon","Washington"],["Nebraska","Wisconsin"],["TCU","Baylor"],
+  ["Oklahoma St","Kansas St"]
+];
+// favorites[gi] = 0 means games[gi][0] is the favorite, 1 means games[gi][1] is favorite
+const favorites = [0,0,0,0,0,1,0,0,0,0,1,0,1];
+
+const results = {
+  1:[0,1,0,1,0,1,0,1,0,1,0,1,0],
+  2:[1,0,1,0,1,0,1,0,1,0,1,0,1],
+  3:[0,0,1,1,0,0,1,1,0,0,1,1,0],
+  4:[1,1,0,0,1,1,0,0,1,1,0,0,1],
+  5:[0,1,1,0,0,1,1,0,0,1,1,0,0],
+  6:[1,0,0,1,1,0,0,1,1,0,0,1,1],
+  7:[0,1,0,1,0,1,0,1,0,1,0,1,0],
+};
+
+function rando(seed) {
+  let x = Math.sin(seed) * 10000;
+  return Math.floor((x - Math.floor(x)) * 2);
+}
+
+const picks = {};
+for (let w = 1; w <= WEEKS; w++) {
+  picks[w] = {};
+  participants.forEach((p, pi) => {
+    picks[w][p] = games.map((_, gi) => rando(pi * 100 + gi * 7 + w * 1000));
+  });
+}
+
+// Tiebreaker guesses: tbGuesses[week][participant] = number
+// Actual combined score of final game: tbActual[week] = number
+const tbGuesses = {};
+const tbActual = { 1:47, 2:52, 3:38, 4:61, 5:44, 6:55, 7:49 };
+for (let w = 1; w <= WEEKS; w++) {
+  tbGuesses[w] = {};
+  participants.forEach((p, pi) => {
+    // Random guess between 28-75 for sample data
+    tbGuesses[w][p] = 28 + Math.abs(Math.floor(Math.sin(pi * 37 + w * 91) * 10000) % 48);
+  });
+}
+
+function tbDiff(week, participant) {
+  if (!tbActual[week] || tbGuesses[week]?.[participant] == null) return null;
+  return Math.abs(tbGuesses[week][participant] - tbActual[week]);
+}
+
+function weekWinner(week) {
+  if (!results[week]) return null;
+  const maxScore = Math.max(...participants.map(p => weekScore(week, p)));
+  const tied = participants.filter(p => weekScore(week, p) === maxScore);
+  if (tied.length === 1) return { winner: tied[0], tiebreak: false };
+  // Tiebreaker — closest guess wins
+  if (!tbActual[week]) return { winner: tied[0], tiebreak: false };
+  const best = tied.reduce((a, b) => tbDiff(week, a) <= tbDiff(week, b) ? a : b);
+  return { winner: best, tiebreak: true };
+}
+
+function weekScore(week, participant) {
+  if (!results[week]) return 0;
+  return picks[week][participant].reduce((sum, pick, gi) =>
+    sum + (pick === results[week][gi] ? (DOUBLE_GAMES.includes(gi) ? 2 : 1) : 0), 0);
+}
+
+// Season standings through all weeks
+const seasonData = participants.map(p => {
+  let pts = 0, wins = 0, losses = 0;
+  let dblCorrect = 0, dblTotal = 0;
+  let weekScores = [];
+  let weekResults = []; // 'W' or 'L' per week
+
+  for (let w = 1; w <= WEEKS; w++) {
+    if (!results[w]) continue;
+    const s = weekScore(w, p);
+    pts += s;
+    weekScores.push(s);
+
+    const max = Math.max(...participants.map(pp => weekScore(w, pp)));
+    const isWin = s === max;
+    if (isWin) wins++; else losses++;
+    weekResults.push(isWin ? 'W' : 'L');
+
+    // 2PT game record
+    DOUBLE_GAMES.forEach(gi => {
+      dblTotal++;
+      if (picks[w][p][gi] === results[w][gi]) dblCorrect++;
+    });
+  }
+
+  // Streak
+  let streak = 0;
+  let streakType = weekResults[weekResults.length - 1];
+  for (let i = weekResults.length - 1; i >= 0; i--) {
+    if (weekResults[i] === streakType) streak++;
+    else break;
+  }
+
+  // Last 5
+  const last5 = weekResults.slice(-5);
+
+  return { name: p, pts, wins, losses, dblCorrect, dblTotal, weekScores, streak, streakType, last5 };
+}).sort((a, b) => b.pts - a.pts);
+
+// Standings through WEEKS-1 (last week) to compute rank movement
+const prevSeasonData = participants.map(p => {
+  let pts = 0;
+  for (let w = 1; w <= WEEKS - 1; w++) {
+    if (!results[w]) continue;
+    pts += weekScore(w, p);
+  }
+  return { name: p, pts };
+}).sort((a, b) => b.pts - a.pts);
+
+const prevRankMap = {};
+prevSeasonData.forEach((d, i) => { prevRankMap[d.name] = i + 1; });
+
+const weeklyWinners = {};
+for (let w = 1; w <= WEEKS; w++) {
+  if (!results[w]) continue;
+  let best = null, bestScore = -1;
+  participants.forEach(p => {
+    const s = weekScore(w, p);
+    if (s > bestScore) { bestScore = s; best = p; }
+  });
+  weeklyWinners[w] = { name: best, score: bestScore };
+}
+
+function renderStandings() {
+  const maxPts = seasonData[0]?.pts || 1;
+  const leader = seasonData[0]?.pts || 0;
+
+  // Max possible points remaining in season
+  const weeksLeft = Array.from({length: 14}, (_, i) => i + 1).filter(w => !results[w]).length;
+  const maxPerWeek = 16; // 3x2pt + 10x1pt
+  const maxRemaining = weeksLeft * maxPerWeek;
+
+  document.getElementById('standings-body').innerHTML = seasonData.map((d, i) => {
+    const rankClass = ['rank-1','rank-2','rank-3'][i] || 'rank-other';
+    const currentRank = i + 1;
+    const prevRank = prevRankMap[d.name] || currentRank;
+    const diff = prevRank - currentRank;
+    let moveHtml = diff > 0
+      ? `<span class="move-up">▲${diff}</span>`
+      : diff < 0 ? `<span class="move-down">▼${Math.abs(diff)}</span>`
+      : `<span class="move-same">—</span>`;
+
+    // Streak
+    const streakColor = d.streakType === 'W' ? 'var(--green)' : 'var(--red)';
+    const streakEmoji = d.streak >= 3 ? (d.streakType === 'W' ? ' 🔥' : ' 🥶') : '';
+    const streakHtml = `<span class="stat-pill" style="color:${streakColor}">${d.streakType}${d.streak}${streakEmoji}</span>`;
+
+    // 2PT record
+    const dblHtml = `<span class="stat-pill" style="color:var(--muted)">2PT: <span style="color:var(--accent)">${d.dblCorrect}/${d.dblTotal}</span></span>`;
+
+    // Last 5 dots
+    const dotsHtml = `<span class="last5-wrap">${d.last5.map(r =>
+      `<span class="l5-dot" style="background:${r === 'W' ? 'var(--green)' : 'var(--red)'}"></span>`
+    ).join('')}</span>`;
+
+    // Mini sparkline — rank position per week (higher on chart = better rank)
+    const rankByWeek = [];
+    for (let w = 1; w <= WEEKS; w++) {
+      if (!results[w]) continue;
+      const weekPts = participants.map(p => ({ name: p, s: weekScore(w, p) }));
+      // cumulative pts up to this week
+      const cumPts = participants.map(p => ({
+        name: p,
+        s: Array.from({length: w}, (_, wi) => results[wi+1] ? weekScore(wi+1, p) : 0).reduce((a,b) => a+b, 0)
+      })).sort((a, b) => b.s - a.s);
+      const r = cumPts.findIndex(x => x.name === d.name) + 1;
+      rankByWeek.push(r);
+    }
+    const totalParticipants = participants.length;
+    const sw = 60, sh = 20;
+    const sparkPoints = rankByWeek.map((r, idx) => {
+      const x = rankByWeek.length === 1 ? sw/2 : (idx / (rankByWeek.length - 1)) * sw;
+      // invert: rank 1 = top, rank N = bottom
+      const y = sh - ((totalParticipants - r) / (totalParticipants - 1)) * (sh - 4) - 2;
+      return { x, y };
+    });
+    const pts_svg = sparkPoints.map(p => `${p.x},${p.y}`).join(' ');
+    const sparkColor = rankByWeek.length > 1 && rankByWeek[rankByWeek.length-1] < rankByWeek[0] ? 'var(--green)' : rankByWeek.length > 1 && rankByWeek[rankByWeek.length-1] > rankByWeek[0] ? 'var(--red)' : 'var(--accent)';
+    const sparkHtml = `<svg width="${sw}" height="${sh}" style="vertical-align:middle">
+      <polyline points="${pts_svg}" fill="none" stroke="${sparkColor}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      ${sparkPoints.map(p => `<circle cx="${p.x}" cy="${p.y}" r="2" fill="${sparkColor}"/>`).join('')}
+    </svg>`;
+
+    return `<tr>
+      <td class="rank-cell ${rankClass}">${currentRank}</td>
+      <td class="name-cell" style="min-width:0;width:100%">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <span style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+            <span class="name-link" onclick="openPlayer('${d.name}')">${d.name}</span>
+            ${moveHtml}
+          </span>
+          <span style="display:flex;align-items:center;gap:16px;flex:1;justify-content:center">
+            ${sparkHtml}
+            ${dblHtml}
+            ${i === 0 ? '<span class="stat-pill" style="color:var(--gold)">Leader</span>' : '<span class="stat-pill" style="color:var(--red)">-' + (leader - d.pts) + ' pts</span>'}
+          </span>
+        </div>
+      </td>
+      <td class="wl-cell"><span class="wins">${d.wins}</span></td>
+      <td class="wl-cell"><span class="losses">${d.losses}</span></td>
+      <td class="pts-cell">${d.pts}</td>
+    </tr>`;
+  }).join('');
+}
+
+function buildWeekPills(containerId, activeWeek, callback) {
+  document.getElementById(containerId).innerHTML =
+    Array.from({length: WEEKS}, (_, i) => i + 1).map(w =>
+      `<div class="week-pill ${w === activeWeek ? 'active' : ''}" onclick="${callback}(${w})">${results[w] ? '✓ ' : ''}Wk ${w}</div>`
+    ).join('');
+}
+
+// Track sort state for weekly picks
+let picksSort = { col: null, dir: 1 }; // col: null=points, number=game index
+
+function renderPicks(week) {
+  picksSort = { col: null, dir: 1 }; // reset sort when switching weeks
+  renderPicksTable(week);
+}
+
+function sortPicksByCol(week, col) {
+  if (col === null) {
+    picksSort = { col: null, dir: 1 };
+  } else if (picksSort.col === col) {
+    picksSort.dir *= -1;
+  } else {
+    picksSort.col = col;
+    picksSort.dir = 1;
+  }
+  renderPicksTable(week);
+}
+
+function renderPicksTable(week) {
+  buildWeekPills('week-selector', week, 'renderPicks');
+  const res = results[week];
+
+  // Compute winner info up front so sort can use it
+  const winnerInfo = res ? weekWinner(week) : null;
+  const maxScore = res ? Math.max(...participants.map(p => weekScore(week, p))) : null;
+  const tiedCount = res ? participants.filter(p => weekScore(week, p) === maxScore).length : 0;
+  const hasTie = tiedCount > 1;
+
+  // Sort participants
+  let sorted;
+  if (picksSort.col === null) {
+    const winner = winnerInfo?.winner;
+    sorted = [...participants].sort((a, b) => {
+      const sa = weekScore(week, a);
+      const sb = weekScore(week, b);
+      if (sb !== sa) return sb - sa;
+      // Same points — tiebreaker winner goes first
+      if (a === winner) return -1;
+      if (b === winner) return 1;
+      // Among remaining ties, sort by closeness to tiebreaker
+      const da = tbDiff(week, a) ?? 999;
+      const db = tbDiff(week, b) ?? 999;
+      return da - db;
+    });
+  } else if (picksSort.col === 'name') {
+    sorted = [...participants].sort((a, b) => picksSort.dir * a.localeCompare(b));
+  } else if (picksSort.col === 'tb') {
+    sorted = [...participants].sort((a, b) => {
+      const ga = tbGuesses[week]?.[a] ?? 999;
+      const gb = tbGuesses[week]?.[b] ?? 999;
+      return picksSort.dir * (ga - gb);
+    });
+  } else {
+    sorted = [...participants].sort((a, b) => {
+      const nameA = games[picksSort.col][picks[week][a][picksSort.col]];
+      const nameB = games[picksSort.col][picks[week][b][picksSort.col]];
+      return picksSort.dir * nameA.localeCompare(nameB);
+    });
+  }
+
+  const headers = games.map((g, gi) => {
+    const isDbl = DOUBLE_GAMES.includes(gi);
+    const isActive = picksSort.col === gi;
+    const arrow = isActive ? (picksSort.dir === 1 ? ' ▲' : ' ▼') : '';
+    const activeStyle = isActive ? 'color:var(--accent);cursor:pointer' : 'cursor:pointer';
+    return `<th style="${activeStyle}" onclick="sortPicksByCol(${week}, ${gi})">${g[0].slice(0,4).toUpperCase()}<br><span style="font-size:9px;opacity:0.4">vs</span><br>${g[1].slice(0,4).toUpperCase()}${isDbl ? `<span class="dbl">2PT</span>` : ''}${arrow ? `<span style="font-size:9px">${arrow}</span>` : ''}</th>`;
+  });
+
+  // Tiebreaker header
+  const tbActualVal = tbActual[week];
+  const tbActualDisplay = tbActualVal ? ('<br><span style="font-size:9px;color:#34d399">ACT:' + tbActualVal + '</span>') : '';
+  const tbTieDisplay = hasTie ? '<br><span style="font-size:8px;color:#f87171">TIE!</span>' : '';
+  const tbColColor = picksSort.col === 'tb' ? 'color:var(--accent)' : 'color:var(--gold)';
+  const tbOnclick = 'sortPicksByCol(' + week + ', \x22tb\x22)';
+  const tbHeader = '<th style="border-left:2px solid var(--border);cursor:pointer;' + tbColColor + '" onclick="' + tbOnclick + '">' +
+    'TB<br><span style="font-size:8px;opacity:0.7">GUESS</span>' + tbActualDisplay + tbTieDisplay + '</th>';
+
+  const rows = sorted.map(p => {
+    const s = res ? weekScore(week, p) : '—';
+    const isWinner = res && winnerInfo && p === winnerInfo.winner;
+    const isMaxScore = res && weekScore(week, p) === maxScore;
+
+    const cells = games.map((g, gi) => {
+      const pick = picks[week][p][gi];
+      const teamName = g[pick];
+      if (!res) return `<td>${teamBadge(teamName, '')}</td>`;
+      const status = pick === res[gi] ? 'correct' : 'wrong';
+      return `<td>${teamBadge(teamName, status)}</td>`;
+    }).join('');
+
+    // Tiebreaker cell
+    const guess = tbGuesses[week]?.[p];
+    const diff = res && tbActualVal ? tbDiff(week, p) : null;
+    const tbColor = isMaxScore && hasTie ? (isWinner ? 'var(--green)' : 'var(--red)') : 'var(--muted)';
+    const tbCell = `<td style="border-left:2px solid var(--border);font-family:Bebas Neue,sans-serif;font-size:16px;color:${tbColor};text-align:center">
+      ${guess ?? '—'}${diff !== null && isMaxScore && hasTie ? `<br><span style="font-size:9px">(±${diff})</span>` : ''}
+    </td>`;
+
+    const rowBg = isWinner ? 'rgba(56,189,248,0.05)' : '';
+    return `<tr style="height:52px;background:${rowBg}">
+      ${cells}
+      ${tbCell}
+      <td class="pts-col">${s}</td>
+    </tr>`;
+  }).join('');
+
+  // Consensus row - most popular pick for each game
+  const consensusCells = games.map((g, gi) => {
+    const favCount = participants.filter(p => picks[week][p][gi] === 0).length;
+    const dogCount = participants.length - favCount;
+    const majorityPick = favCount >= dogCount ? 0 : 1;
+    const majorityPct = Math.round((Math.max(favCount, dogCount) / participants.length) * 100);
+    const teamName = g[majorityPick];
+    const status = res ? (majorityPick === res[gi] ? 'correct' : 'wrong') : '';
+    return '<td style="background:var(--surface2)">' + teamBadge(teamName, status) + '<span class="dbl" style="display:block;font-size:8px;color:var(--muted);text-align:center">' + majorityPct + '%</span></td>';
+  }).join('');
+
+  const consensusTbCell = '<td style="border-left:2px solid var(--border);background:var(--surface2)"></td>';
+  const consensusRow = '<tr style="border-top:2px solid var(--border);background:var(--surface2)">' +
+    consensusCells +
+    consensusTbCell +
+    '<td class="pts-col" style="color:var(--muted)">—</td>' +
+    '</tr>';;
+
+  const ptsArrow = picksSort.col === null ? ' ▼' : '';
+  // Build name rows for left fixed panel
+  const nameRows = sorted.map(p => {
+    const isWinner = res && winnerInfo && p === winnerInfo.winner;
+    const bg = isWinner ? 'rgba(56,189,248,0.08)' : 'var(--surface)';
+    return `<tr style="height:52px"><td style="padding:8px 10px;font-weight:600;font-size:13px;white-space:nowrap;background:${bg};border-bottom:1px solid var(--border)">${p}${isWinner ? ' 🏆' : ''}</td></tr>`;
+  }).join('');
+  const nameConsensusRow = `<tr style="height:52px;border-top:2px solid var(--border)"><td style="padding:8px 10px;color:var(--muted);font-size:11px;font-weight:700;letter-spacing:0.5px;background:var(--surface2);border-bottom:1px solid var(--border)">CONSENSUS</td></tr>`;
+
+  const nameSortArrow = picksSort.col === 'name' ? (picksSort.dir === 1 ? ' ▲' : ' ▼') : '';
+  const nameHeaderStyle = picksSort.col === 'name' ? 'color:var(--accent)' : '';
+
+  const _ptTarget = document.getElementById('picks-table-wrap') || document.getElementById('picks-table');
+  _ptTarget.outerHTML = `
+    <div id="picks-table-wrap" style="display:flex;align-items:flex-start;border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <div style="flex-shrink:0;border-right:2px solid var(--border)">
+        <table style="border-collapse:collapse;font-size:12px">
+          <thead><tr style="height:52px"><th style="padding:8px 10px;background:var(--surface2);color:var(--muted);font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;white-space:nowrap;cursor:pointer;${nameHeaderStyle};border-bottom:1px solid var(--border)" onclick="sortPicksByCol(${week},'name')">Participant${nameSortArrow}</th></tr></thead>
+          <tbody>${nameRows}${nameConsensusRow}</tbody>
+        </table>
+      </div>
+      <div style="overflow-x:auto;flex:1;min-width:0">
+        <table id="picks-table" style="border-collapse:collapse;font-size:12px;min-width:${games.length * 56}px">
+          <thead><tr>
+            ${headers.join('')}
+            ${tbHeader}
+            <th class="pts-col" style="cursor:pointer;${picksSort.col === null ? 'color:var(--accent)' : ''}" onclick="(function(){picksSort={col:null,dir:1};renderPicksTable(${week})})()">PTS${ptsArrow}</th>
+          </tr></thead>
+          <tbody>${rows}${consensusRow}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function renderDistribution(week) {
+  buildWeekPills('dist-week-selector', week, 'renderDistribution');
+  const res = results[week];
+  const total = participants.length;
+
+  document.getElementById('dist-content').innerHTML = games.map((g, gi) => {
+    const isDbl = DOUBLE_GAMES.includes(gi);
+    const favIdx = favorites[gi];       // 0 or 1 — which team is the favorite
+    const dogIdx = 1 - favIdx;          // the other team
+    const favTeam = g[favIdx];
+    const dogTeam = g[dogIdx];
+
+    const favCount = participants.filter(p => picks[week][p][gi] === favIdx).length;
+    const dogCount = total - favCount;
+    const favPct = Math.round((favCount / total) * 100);
+    const dogPct = 100 - favPct;
+
+    // Determine which side won (if results in)
+    const favWon = res ? res[gi] === favIdx : null;
+    const dogWon = res ? res[gi] === dogIdx : null;
+
+    // Majority side gets green, minority gets red (when results known, winner overrides)
+    let favBarColor, dogBarColor;
+    if (res) {
+      favBarColor = favWon ? '#34d399' : '#f87171';
+      dogBarColor = dogWon ? '#34d399' : '#f87171';
+    } else {
+      favBarColor = favPct >= dogPct ? '#34d399' : '#f87171';
+      dogBarColor = dogPct > favPct ? '#34d399' : '#f87171';
+    }
+
+    const winnerLabel = res ? (favWon ? '✓ ' : '') : '';
+    const loserLabel  = res ? (dogWon  ? '✓ ' : '') : '';
+
+    return '<div class="dist-game">' +
+      '<div class="dist-game-title">' +
+        '<span>Game ' + (gi+1) + ': ' + favTeam + ' vs ' + dogTeam + '</span>' +
+        (isDbl ? '<span class="dist-double-badge">2 PTS</span>' : '') +
+      '</div>' +
+      '<div class="dist-split-row">' +
+        '<div class="dist-split-team fav-side">' +
+          '<div class="dist-split-name">' + winnerLabel + favTeam + '</div>' +
+          '<div class="dist-split-count">' + favCount + ' picks</div>' +
+        '</div>' +
+        '<div class="dist-split-bar-wrap">' +
+          '<div class="dist-split-bar" style="display:flex;height:28px;border-radius:6px;overflow:hidden;background:var(--surface2)">' +
+            '<div style="width:' + favPct + '%;background:' + favBarColor + ';display:flex;align-items:center;justify-content:flex-end;padding-right:6px;font-size:11px;font-weight:700;color:#000;min-width:' + (favPct > 0 ? '30px' : '0') + ';transition:width 0.5s ease">' + (favPct > 8 ? favPct + '%' : '') + '</div>' +
+            '<div style="width:' + dogPct + '%;background:' + dogBarColor + ';display:flex;align-items:center;justify-content:flex-start;padding-left:6px;font-size:11px;font-weight:700;color:#000;min-width:' + (dogPct > 0 ? '30px' : '0') + ';transition:width 0.5s ease">' + (dogPct > 8 ? dogPct + '%' : '') + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="dist-split-team dog-side">' +
+          '<div class="dist-split-name">' + loserLabel + dogTeam + '</div>' +
+          '<div class="dist-split-count">' + dogCount + ' picks</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+let chartsRendered = false;
+function renderCharts() {
+  if (chartsRendered) return;
+  chartsRendered = true;
+
+  // --- Consensus Accuracy Chart (pure CSS bars) ---
+  const completedWeeksAll = Array.from({length: WEEKS}, (_, i) => i + 1).filter(w => results[w]);
+  const consensusAccuracy = completedWeeksAll.map(w => {
+    let correct = 0, total = 0;
+    games.forEach((g, gi) => {
+      participants.forEach(p => {
+        if (picks[w][p][gi] === results[w][gi]) correct++;
+        total++;
+      });
+    });
+    return total > 0 ? Math.round((correct / total) * 100) : 0;
+  });
+
+  function renderConsensusChart() {
+    const max = 100;
+    const html = '<div class="pure-bar-chart">' +
+      consensusAccuracy.map((val, i) => {
+        const color = val >= 60 ? 'var(--green)' : val >= 45 ? 'var(--gold)' : 'var(--red)';
+        return '<div class="pure-bar-col">' +
+          '<div class="pure-bar-val" style="color:' + color + '">' + val + '%</div>' +
+          '<div class="pure-bar-outer"><div class="pure-bar-inner" style="height:' + Math.round((val/max)*100) + '%;background:' + color + '"></div></div>' +
+          '<div class="pure-bar-label">Wk ' + completedWeeksAll[i] + '</div>' +
+        '</div>';
+      }).join('') +
+    '</div>';
+    document.getElementById('chart-consensus').innerHTML = html;
+  }
+  renderConsensusChart();
+
+  // --- Points Per Week Chart (pure CSS bars) ---
+  const ppwSelect = document.getElementById('ppw-select');
+  seasonData.forEach((d, i) => {
+    const opt = document.createElement('option');
+    opt.value = d.name;
+    opt.textContent = '#' + (i + 1) + ' ' + d.name;
+    ppwSelect.appendChild(opt);
+  });
+
+  window.renderPPWChart = function() {
+    const name = document.getElementById('ppw-select').value;
+    if (!name) return;
+    const scores = completedWeeksAll.map(w => weekScore(w, name));
+    const maxScore = Math.max(...scores, 1);
+    const avg = scores.reduce((a,b) => a+b, 0) / scores.length;
+    const html = '<div class="pure-bar-chart">' +
+      scores.map((val, i) => {
+        const color = val >= avg ? 'var(--accent)' : 'var(--muted)';
+        const pct = Math.round((val/maxScore)*100);
+        return '<div class="pure-bar-col">' +
+          '<div class="pure-bar-outer"><div class="pure-bar-inner" style="height:' + pct + '%;background:' + color + ';display:flex;align-items:flex-start;justify-content:center;padding-top:4px"><span style="font-family:Bebas Neue,sans-serif;font-size:13px;font-weight:700;color:' + (pct > 15 ? color : 'transparent') + '">' + val + '</span></div></div>' +
+          '<div class="pure-bar-label">Wk ' + completedWeeksAll[i] + '</div>' +
+        '</div>';
+      }).join('') +
+      '<div class="pure-avg-line" style="bottom:' + Math.round((avg/maxScore)*100) + '%"><span style="position:absolute;right:2px;top:-14px;font-size:9px;color:rgba(251,191,36,0.8);white-space:nowrap">avg ' + avg.toFixed(1) + '</span></div>' +
+    '</div>';
+    document.getElementById('chart-ppw').innerHTML = html;
+  };
+  renderPPWChart();
+
+  // --- Weekly Winners Table ---
+
+  document.getElementById('winners-table').innerHTML =
+    '<thead><tr><th>Week</th><th>Winner</th><th style="text-align:right">Score</th></tr></thead><tbody>' +
+    Object.entries(weeklyWinners).map(function(e) {
+      var w = e[0], d = e[1];
+      return '<tr><td style="color:var(--muted)">Week ' + w + '</td><td style="font-weight:600">' + d.name + ' 🏆</td><td class="pts-cell">' + d.score + '</td></tr>';
+    }).join('') + '</tbody>';
+
+  // Bump Chart
+  var completedWeeks = [];
+  for (var wi = 1; wi <= WEEKS; wi++) { if (results[wi]) completedWeeks.push(wi); }
+  var n = participants.length;
+
+  // High-contrast color palette that cycles and stays distinct
+  var CONTRAST_COLORS = [
+    '#38bdf8','#34d399','#f87171','#fbbf24','#a78bfa',
+    '#f472b6','#fb923c','#4ade80','#60a5fa','#e879f9',
+    '#facc15','#2dd4bf','#f97316','#818cf8','#86efac',
+    '#ff6b6b','#4ecdc4','#45b7d1','#96ceb4','#ffad60'
+  ];
+
+  function pickColor(i) {
+    return CONTRAST_COLORS[i % CONTRAST_COLORS.length];
+  }
+
+  var rankData = {};
+  participants.forEach(function(p) { rankData[p] = []; });
+
+  completedWeeks.forEach(function(w) {
+    var cumPts = participants.map(function(p) {
+      var pts = completedWeeks.filter(function(ww) { return ww <= w; }).reduce(function(s, ww) { return s + weekScore(ww, p); }, 0);
+      return { name: p, pts: pts };
+    }).sort(function(a, b) { return b.pts - a.pts; });
+    cumPts.forEach(function(d, i) { rankData[d.name].push(i + 1); });
+  });
+
+  var weekLabels = completedWeeks.map(function(w) { return 'Week ' + w; });
+  var datasets = participants.map(function(p, i) {
+    return {
+      label: p,
+      data: rankData[p],
+      borderColor: pickColor(i),
+      backgroundColor: pickColor(i),
+      borderWidth: 1.5,
+      pointRadius: 3,
+      pointHoverRadius: 3,
+      tension: 0.3,
+      fill: false
+    };
+  });
+
+  window.bumpFilter = 'top15';
+  window.customBumpSelected = {};
+
+  // Build checklist
+  var checklist = document.getElementById('bump-checklist');
+  checklist.innerHTML = participants.map(function(p) {
+    var rank = seasonData.findIndex(function(d) { return d.name === p; }) + 1;
+    var esc = p.replace(/'/g, "\'");
+    return '<label class="bump-check-item"><input type="checkbox" onchange="updateCustomSelection(\'' + esc + '\',this.checked)"> <span>#' + rank + ' ' + p + '</span></label>';
+  }).join('');
+
+  renderBumpChart('top15');
+}
+
+window.updateCustomSelection = function(name, checked) {
+  if (!window.customBumpSelected) window.customBumpSelected = {};
+  window.customBumpSelected[name] = checked;
+  renderBumpChart('custom');
+};
+
+window.closeBumpChecklist = function() {
+  document.getElementById('bump-checklist-wrap').style.display = 'none';
+  renderBumpChart('custom');
+};
+window.setBumpFilter = function(filter, btn) {
+  window.bumpFilter = filter;
+  document.querySelectorAll('.bump-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  var wrap = document.getElementById('bump-checklist-wrap');
+  if (filter === 'custom') {
+    wrap.style.display = 'block';
+  } else {
+    wrap.style.display = 'none';
+  }
+  renderBumpChart(filter);
+};
+
+function renderBumpChart(filter) {
+  var container = document.getElementById('chart-bump');
+  if (!container) return;
+
+  var COLORS = ['#38bdf8','#34d399','#f87171','#fbbf24','#a78bfa',
+    '#f472b6','#fb923c','#4ade80','#60a5fa','#e879f9',
+    '#facc15','#2dd4bf','#f97316','#818cf8','#86efac',
+    '#ff6b6b','#4ecdc4','#45b7d1','#96ceb4','#ffad60'];
+
+  var completedWeeks = [];
+  for (var w = 1; w <= WEEKS; w++) { if (results[w]) completedWeeks.push(w); }
+  var W = completedWeeks.length;
+  if (W === 0) { container.innerHTML = '<div style="color:var(--muted);padding:20px;text-align:center">No completed weeks yet</div>'; return; }
+
+  // Build cumulative points per week per participant
+  var cumPts = {};
+  participants.forEach(function(p) { cumPts[p] = []; });
+  completedWeeks.forEach(function(w) {
+    participants.forEach(function(p) {
+      var prev = cumPts[p].length ? cumPts[p][cumPts[p].length - 1] : 0;
+      cumPts[p].push(prev + weekScore(w, p));
+    });
+  });
+
+  // Rank at each week
+  var rankAtWeek = {};
+  participants.forEach(function(p) { rankAtWeek[p] = []; });
+  for (var wi = 0; wi < W; wi++) {
+    var sorted = participants.slice().sort(function(a, b) { return cumPts[b][wi] - cumPts[a][wi]; });
+    sorted.forEach(function(p, ri) { rankAtWeek[p].push(ri + 1); });
+  }
+
+  // Final ranks
+  var finalRank = {};
+  participants.forEach(function(p) { finalRank[p] = rankAtWeek[p][W - 1] || 99; });
+  var sortedByFinal = participants.slice().sort(function(a, b) { return finalRank[a] - finalRank[b]; });
+
+  // Select which to show
+  var selected;
+  if (filter === 'top15') selected = sortedByFinal.slice(0, 15);
+  else if (filter === '16-30') selected = sortedByFinal.slice(15, 30);
+  else if (filter === '31-45') selected = sortedByFinal.slice(30, 45);
+  else if (filter === '46plus') selected = sortedByFinal.slice(45);
+  else {
+    selected = sortedByFinal.filter(function(p) { return window.customBumpSelected && window.customBumpSelected[p]; });
+  }
+  if (!selected.length) {
+    container.innerHTML = '<div style="color:var(--muted);padding:20px;text-align:center">Select participants to display</div>';
+    return;
+  }
+
+  var N = participants.length;
+  var svgW = 300, svgH = 460, padL = 24, padR = 100, padT = 14, padB = 22;
+  var cW = svgW - padL - padR;
+  var cH = svgH - padT - padB;
+  var xStep = W > 1 ? cW / (W - 1) : cW;
+  var yStep = cH / Math.max(N - 1, 1);
+
+  function xp(wi) { return padL + wi * xStep; }
+  function yp(rank) { return padT + (rank - 1) * yStep; }
+
+  var grid = '';
+  for (var r = 1; r <= N; r += 5) {
+    var y = yp(r);
+    grid += '<line x1="' + padL + '" y1="' + y + '" x2="' + (svgW - padR) + '" y2="' + y + '" stroke="#2e4060" stroke-width="0.5"/>';
+    grid += '<text x="' + (padL - 3) + '" y="' + (y + 3) + '" fill="#64748b" font-size="8" text-anchor="end">#' + r + '</text>';
+  }
+  completedWeeks.forEach(function(w, wi) {
+    grid += '<text x="' + xp(wi) + '" y="' + (svgH - 4) + '" fill="#64748b" font-size="8" text-anchor="middle">Wk' + w + '</text>';
+  });
+
+  var paths = '', dots = '', labels = '';
+  selected.forEach(function(p, ci) {
+    var color = COLORS[ci % COLORS.length];
+    var ranks = rankAtWeek[p];
+    var d = '';
+    for (var wi = 0; wi < W; wi++) {
+      var x = xp(wi), y = yp(ranks[wi]);
+      if (wi === 0) { d += 'M' + x.toFixed(1) + ',' + y.toFixed(1); }
+      else {
+        var px = xp(wi - 1), py = yp(ranks[wi - 1]);
+        var cx = ((px + x) / 2).toFixed(1);
+        d += ' C' + cx + ',' + py.toFixed(1) + ' ' + cx + ',' + y.toFixed(1) + ' ' + x.toFixed(1) + ',' + y.toFixed(1);
+      }
+      dots += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="2.5" fill="' + color + '"/>';
+    }
+    paths += '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="1.8" opacity="0.9"/>';
+    var lastRank = ranks[W - 1];
+    labels += '<text x="' + (svgW - padR + 5) + '" y="' + (yp(lastRank) + 3) + '" fill="' + color + '" font-size="9">' + p + '</text>';
+  });
+
+  container.innerHTML = '<svg viewBox="0 0 ' + svgW + ' ' + svgH + '" width="100%" style="display:block;overflow:visible">' + grid + paths + dots + labels + '</svg>';
+}
+
+let lastPage = 'standings';
+let lastBtn = null;
+
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-player').classList.remove('active');
+  document.getElementById('page-' + id).classList.add('active');
+  btn.classList.add('active');
+  lastPage = id;
+  lastBtn = btn;
+  if (id === 'charts') renderCharts();
+}
+
+function goBack() {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + lastPage).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  if (lastBtn) lastBtn.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function openPlayer(name) {
+  // Hide all pages and nav highlight
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+  const rank = seasonData.findIndex(d => d.name === name) + 1;
+  const seasonEntry = seasonData.find(d => d.name === name);
+
+  // Compute weekly scores
+  const weekScores = [];
+  for (let w = 1; w <= WEEKS; w++) {
+    if (!results[w]) continue;
+    const s = weekScore(w, name);
+    const correct = picks[w][name].filter((pick, gi) => pick === results[w][gi]).length;
+    const weekMax = Math.max(...participants.map(p => weekScore(w, p)));
+    weekScores.push({ week: w, score: s, correct, isWinner: s === weekMax });
+  }
+
+  const totalCorrect = weekScores.reduce((sum, w) => sum + w.correct, 0);
+  const totalPossiblePicks = weekScores.length * 13;
+  const accuracy = totalPossiblePicks > 0 ? Math.round((totalCorrect / totalPossiblePicks) * 100) : 0;
+  const best = Math.max(...weekScores.map(w => w.score));
+  const worst = Math.min(...weekScores.map(w => w.score));
+  const avg = weekScores.length ? (weekScores.reduce((s, w) => s + w.score, 0) / weekScores.length).toFixed(1) : 0;
+  const weeklyWins = weekScores.filter(w => w.isWinner).length;
+
+  // ── Contrarian % ─────────────────────────────────────────────────────────
+  // How often does this person go against the majority pick?
+  let contraryCount = 0, contraryTotal = 0;
+  for (let w = 1; w <= WEEKS; w++) {
+    if (!picks[w]?.[name]) continue;
+    games.forEach((g, gi) => {
+      const majority = participants.filter(p => picks[w][p][gi] === 0).length >= participants.length / 2 ? 0 : 1;
+      if (picks[w][name][gi] !== majority) contraryCount++;
+      contraryTotal++;
+    });
+  }
+  const contraryPct = contraryTotal > 0 ? Math.round((contraryCount / contraryTotal) * 100) : 0;
+
+  // ── Favorite team to pick ─────────────────────────────────────────────────
+  const teamPickCounts = {};
+  for (let w = 1; w <= WEEKS; w++) {
+    if (!picks[w]?.[name]) continue;
+    games.forEach((g, gi) => {
+      const t = g[picks[w][name][gi]];
+      teamPickCounts[t] = (teamPickCounts[t] || 0) + 1;
+    });
+  }
+  const favTeam = Object.entries(teamPickCounts).sort((a, b) => b[1] - a[1])[0];
+  const favTeamName = favTeam ? favTeam[0] : '—';
+  const favTeamCount = favTeam ? favTeam[1] : 0;
+
+  // ── 2PT record ───────────────────────────────────────────────────────────
+  let dblCorrect = 0, dblTotal = 0;
+  for (let w = 1; w <= WEEKS; w++) {
+    if (!results[w] || !picks[w]?.[name]) continue;
+    DOUBLE_GAMES.forEach(gi => {
+      if (picks[w][name][gi] === results[w][gi]) dblCorrect++;
+      dblTotal++;
+    });
+  }
+  const dblPct = dblTotal > 0 ? Math.round((dblCorrect / dblTotal) * 100) : 0;
+
+  // ── Underdog win % ────────────────────────────────────────────────────────
+  // An underdog win = favorites[gi] !== results[gi] (underdog beat the fav)
+  // We count: how many underdog wins occurred, and how many did this person correctly pick
+  let underdogWins = 0, underdogCorrect = 0;
+  for (let w = 1; w <= WEEKS; w++) {
+    if (!results[w] || !picks[w]?.[name]) continue;
+    games.forEach((g, gi) => {
+      const favIdx = favorites[gi];
+      const upset = results[w][gi] !== favIdx; // underdog won
+      if (upset) {
+        underdogWins++;
+        if (picks[w][name][gi] === results[w][gi]) underdogCorrect++;
+      }
+    });
+  }
+  const underdogPct = underdogWins > 0 ? Math.round((underdogCorrect / underdogWins) * 100) : 0;
+
+  // ── Best & worst team record ──────────────────────────────────────────────
+  // For each team that appears in any game, track if this person correctly
+  // called the result of that game (regardless of which side they picked)
+  const teamRecords = {};
+  for (let w = 1; w <= WEEKS; w++) {
+    if (!results[w] || !picks[w]?.[name]) continue;
+    games.forEach((g, gi) => {
+      const correct = picks[w][name][gi] === results[w][gi];
+      g.forEach(team => {
+        if (!teamRecords[team]) teamRecords[team] = { correct: 0, total: 0 };
+        teamRecords[team].total++;
+        if (correct) teamRecords[team].correct++;
+      });
+    });
+  }
+  // Only consider teams that appeared 2+ times for meaningful stats
+  const teamEntries = Object.entries(teamRecords)
+    .filter(([, r]) => r.total >= 2)
+    .map(([team, r]) => ({ team, ...r, pct: Math.round((r.correct / r.total) * 100) }));
+
+  const bestTeam = teamEntries.length ? teamEntries.reduce((a, b) => b.pct > a.pct ? b : a) : null;
+  const worstTeam = teamEntries.length ? teamEntries.reduce((a, b) => b.pct < a.pct ? b : a) : null;
+
+  // Build pick history rows
+  const historyRows = weekScores.map(ws => {
+    const weekPicks = picks[ws.week][name];
+    const res = results[ws.week];
+    const gameCells = games.map((g, gi) => {
+      const pick = weekPicks[gi];
+      const teamName = g[pick];
+      const correct = pick === res[gi];
+      const isDbl = DOUBLE_GAMES.includes(gi);
+      return `<td>${teamBadge(teamName, correct ? 'correct' : 'wrong')}${isDbl ? '<span class="dbl" style="display:block;font-size:8px;color:var(--gold);text-align:center">2x</span>' : ''}</td>`;
+    }).join('');
+    return `<tr>
+      <td style="font-weight:700;color:var(--muted);white-space:nowrap;position:sticky;left:0;background:var(--surface);z-index:2;min-width:52px">Wk ${ws.week}${ws.isWinner ? ' 🏆' : ''}</td>
+      ${gameCells}
+      <td class="pts-col">${ws.score}</td>
+    </tr>`;
+  }).join('');
+
+  const gameHeaders = games.map((g, gi) => {
+    const isDbl = DOUBLE_GAMES.includes(gi);
+    return `<th>${g[0].slice(0,4).toUpperCase()}<br><span style="font-size:9px;opacity:0.4">vs</span><br>${g[1].slice(0,4).toUpperCase()}${isDbl ? `<span class="dbl">2PT</span>` : ''}</th>`;
+  }).join('');
+
+  document.getElementById('player-content').innerHTML = `
+    <div class="player-name">${name}</div>
+    <div class="player-rank">Season Rank: <span style="color:var(--accent)">#${rank}</span></div>
+
+    <div class="profile-tabs">
+      <button class="profile-tab active" onclick="switchProfileTab('overview', this)">Overview</button>
+      <button class="profile-tab" onclick="switchProfileTab('advanced', this)">Advanced</button>
+    </div>
+
+    <div id="profile-tab-overview" class="pstat-grid">
+      <div class="pstat-card">
+        <div class="pstat-value" style="color:var(--accent)">${seasonEntry.pts}</div>
+        <div class="pstat-label">Total Points</div>
+      </div>
+      <div class="pstat-card">
+        <div class="pstat-value" style="color:var(--gold)">${weeklyWins}</div>
+        <div class="pstat-label">Weekly Wins</div>
+      </div>
+      <div class="pstat-card">
+        <div class="pstat-value" style="color:var(--green)">${best}</div>
+        <div class="pstat-label">Best Week</div>
+      </div>
+      <div class="pstat-card">
+        <div class="pstat-value" style="color:var(--red)">${worst}</div>
+        <div class="pstat-label">Worst Week</div>
+      </div>
+      <div class="pstat-card">
+        <div class="pstat-value">${avg}</div>
+        <div class="pstat-label">Avg Per Week</div>
+      </div>
+      <div class="pstat-card">
+        <div class="pstat-value" style="color:var(--green)">${accuracy}%</div>
+        <div class="pstat-label">Pick Accuracy</div>
+      </div>
+    </div>
+
+    <div id="profile-tab-advanced" class="pstat-grid" style="display:none;grid-template-columns:repeat(3,1fr)">
+      <div class="pstat-card">
+        <div class="pstat-value" style="color:var(--accent)">${contraryPct}%</div>
+        <div class="pstat-label" title="How often they pick against the majority — a higher % means they go their own way more often">Contrarian <span style="font-size:9px;color:var(--muted)">(vs crowd)</span></div>
+      </div>
+      <div class="pstat-card">
+        <div class="pstat-value" style="color:var(--gold)">${dblCorrect}/${dblTotal}</div>
+        <div class="pstat-label">2PT Record (${dblPct}%)</div>
+      </div>
+      <div class="pstat-card">
+        <div class="pstat-value" style="color:var(--accent)">${underdogCorrect}/${underdogWins}</div>
+        <div class="pstat-label" title="How many underdog wins they correctly predicted out of total upsets that occurred">Upset Picks (${underdogPct}%)</div>
+      </div>
+      <div class="pstat-card">
+        <div class="pstat-value" style="font-size:14px;color:var(--gold)">${favTeamName}</div>
+        <div class="pstat-label">Fav Team (${favTeamCount}x)</div>
+      </div>
+      <div class="pstat-card">
+        <div class="pstat-value" style="font-size:14px;color:var(--green)">${bestTeam ? bestTeam.team : '—'}</div>
+        <div class="pstat-label">${bestTeam ? bestTeam.correct + '/' + bestTeam.total + ' Best Team' : 'Best Team'}</div>
+      </div>
+      <div class="pstat-card">
+        <div class="pstat-value" style="font-size:14px;color:var(--red)">${worstTeam ? worstTeam.team : '—'}</div>
+        <div class="pstat-label">${worstTeam ? worstTeam.correct + '/' + worstTeam.total + ' Worst Team' : 'Worst Team'}</div>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top:20px">Pick History</div>
+    <div class="picks-wrapper">
+      <table class="picks-grid">
+        <thead><tr>
+          <th style="text-align:left;min-width:52px;width:52px;position:sticky;left:0;background:var(--surface2);z-index:4">Week</th>
+          ${gameHeaders}
+          <th class="pts-col">PTS</th>
+        </tr></thead>
+        <tbody>${historyRows}</tbody>
+      </table>
+    </div>
+  `;
+
+  document.getElementById('page-player').classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+window.switchProfileTab = function(tab, btn) {
+  var tabs = ['overview', 'advanced'];
+  tabs.forEach(function(t) {
+    var el = document.getElementById('profile-tab-' + t);
+    if (el) el.style.display = (t === tab) ? '' : 'none';
+  });
+  document.querySelectorAll('.profile-tab').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+};
+
+
+
+// ─── Google Sheets API ───────────────────────────────────────────────────────
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbztbl52QPKw3lGCRtffyjfQQAVfvxN4C_xG7068Q2F8ibPFnM0SnzKFKPOcxbvdD4BiAA/exec'; // replaced after deploy
+
+function apiCall(params, callback) {
+  const url = SCRIPT_URL + '?' + Object.entries(params).map(([k,v]) =>
+    k + '=' + encodeURIComponent(typeof v === 'object' ? JSON.stringify(v) : v)
+  ).join('&');
+  fetch(url)
+    .then(r => r.json())
+    .then(data => {
+      if (data.error) { console.error('API error:', data.error); callback(null); }
+      else callback(data);
+    })
+    .catch(err => { console.error('Fetch error:', err); callback(null); });
+}
+
+function loadFromSheet() {
+  const loading = document.getElementById('loading-overlay');
+  if (loading) loading.style.display = 'flex';
+  // First load available seasons, then load data
+  apiCall({ action: 'readSeasons' }, function(seasonsData) {
+    if (seasonsData && seasonsData.seasons) {
+      availableSeasons = seasonsData.seasons;
+      CURRENT_SEASON = Math.max(...availableSeasons);
+      activeSeason = CURRENT_SEASON;
+      renderSeasonSelector();
+    }
+  });
+  apiCall({ action: 'read', season: activeSeason }, function(data) {
+    if (loading) loading.style.display = 'none';
+    if (!data) {
+      showToast('Could not load data from Google Sheets. Using demo data.');
+      initApp();
+      return;
+    }
+    applySheetData(data);
+    initApp();
+  });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.style.opacity = '1';
+  setTimeout(() => { t.style.opacity = '0'; }, 3500);
+}
+
+function saveGamesToSheet(week) {
+  const dbl = [];
+  DOUBLE_GAMES.forEach(gi => dbl.push(gi));
+  apiCall({
+    action: 'saveGames',
+    season: CURRENT_SEASON,
+    data: { week, games, favorites, doubleGames: dbl }
+  }, d => showToast(d ? '✓ Games saved to sheet' : '⚠️ Sheet save failed'));
+}
+
+function savePicksToSheet(week) {
+  const weekPicks = picks[week] || {};
+  const weekTb = tbGuesses[week] || {};
+  const tbMap = {};
+  participants.forEach(p => { tbMap[p] = weekTb[p] !== undefined ? weekTb[p] : null; });
+  apiCall({
+    action: 'savePicks',
+    season: CURRENT_SEASON,
+    data: { week, picks: weekPicks, tbGuesses: tbMap }
+  }, d => showToast(d ? '✓ Picks saved to sheet' : '⚠️ Sheet save failed'));
+}
+
+function saveResultsToSheet(week) {
+  apiCall({
+    action: 'saveResults',
+    season: CURRENT_SEASON,
+    data: { week, results: results[week] || [], tbActual: tbActual[week] || null }
+  }, d => showToast(d ? '✓ Results saved to sheet' : '⚠️ Sheet save failed'));
+}
+
+function initApp() {
+  renderStandings();
+  renderPicks(CURRENT_WEEK);
+  renderDistribution(CURRENT_WEEK);
+  lastBtn = document.querySelector('.nav-btn.active');
+}
+
+// ─── Season Management ───────────────────────────────────────────────────────
+
+function loadSeasons() {
+  apiCall({ action: 'readSeasons' }, function(data) {
+    if (!data || !data.seasons) return;
+    availableSeasons = data.seasons;
+    CURRENT_SEASON = Math.max(...availableSeasons);
+    activeSeason = CURRENT_SEASON;
+    renderSeasonSelector();
+  });
+}
+
+function renderSeasonSelector() {
+  const el = document.getElementById('season-selector');
+  if (!el) return;
+  if (availableSeasons.length <= 1) {
+    el.innerHTML = '<span style="font-size:13px;color:var(--muted);font-weight:700">' + CURRENT_SEASON + ' Season</span>';
+    return;
+  }
+  el.innerHTML = availableSeasons.slice().reverse().map(s =>
+    '<button onclick="switchSeason(' + s + ')" style="background:' + (s === activeSeason ? 'var(--accent)' : 'var(--surface2)') + ';color:' + (s === activeSeason ? '#000' : 'var(--muted)') + ';border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer">' + s + '</button>'
+  ).join('');
+}
+
+window.switchSeason = function(season) {
+  if (season === activeSeason) return;
+  activeSeason = season;
+  renderSeasonSelector();
+  // Reload data for this season
+  const loading = document.getElementById('loading-overlay');
+  if (loading) loading.style.display = 'flex';
+  apiCall({ action: 'read', season }, function(data) {
+    if (loading) loading.style.display = 'none';
+    if (!data) { showToast('Could not load season ' + season); return; }
+    applySheetData(data);
+    initApp();
+  });
+};
+
+function applySheetData(data) {
+  if (data.participants !== undefined) {
+    participants.length = 0;
+    (data.participants || []).forEach(p => participants.push(p));
+  }
+  adminGamesLoaded = true;
+  if (data.games) sheetGames = data.games;
+  if (data.favorites) sheetFavorites = data.favorites;
+  if (data.doubleGames) sheetDoubleGames = data.doubleGames;
+  if (data.games && data.games[CURRENT_WEEK]) {
+    const wg = data.games[CURRENT_WEEK];
+    for (let gi = 0; gi < 13; gi++) { if (wg[gi]) games[gi] = wg[gi]; }
+  }
+  if (data.favorites && data.favorites[CURRENT_WEEK])
+    data.favorites[CURRENT_WEEK].forEach((f,i) => { favorites[i] = f; });
+  if (data.doubleGames && data.doubleGames[CURRENT_WEEK]) {
+    DOUBLE_GAMES.length = 0;
+    data.doubleGames[CURRENT_WEEK].forEach(gi => DOUBLE_GAMES.push(gi));
+  }
+  if (data.picks) {
+    Object.keys(picks).forEach(k => delete picks[k]);
+    Object.keys(data.picks).forEach(w => {
+      picks[w] = {};
+      Object.keys(data.picks[w]).forEach(p => {
+        const arr = data.picks[w][p];
+        picks[w][p] = arr.slice(0,13);
+        const tb = arr[13];
+        if (tb !== null && tb !== undefined) {
+          if (!tbGuesses[w]) tbGuesses[w] = {};
+          tbGuesses[w][p] = tb;
+        }
+      });
+    });
+  }
+  if (data.results) Object.assign(results, data.results);
+  if (data.tbActual) Object.assign(tbActual, data.tbActual);
+}
+
+window.startNewSeason = function() {
+  const year = new Date().getFullYear();
+  const nextSeason = availableSeasons.includes(year) ? year + 1 : year;
+  if (!confirm('Start a new ' + nextSeason + ' season? This will create a fresh slate. Past seasons remain viewable.')) return;
+  apiCall({ action: 'newSeason', data: { season: nextSeason } }, function(d) {
+    if (!d || d.error) { showToast('⚠️ ' + (d ? d.error : 'Failed to create season')); return; }
+    CURRENT_SEASON = nextSeason;
+    activeSeason = nextSeason;
+    availableSeasons.push(nextSeason);
+    // Reset all live data
+    participants.length = 0;
+    Object.keys(picks).forEach(k => delete picks[k]);
+    Object.keys(results).forEach(k => delete results[k]);
+    Object.keys(tbActual).forEach(k => delete tbActual[k]);
+    Object.keys(tbGuesses).forEach(k => delete tbGuesses[k]);
+    renderSeasonSelector();
+    initApp();
+    showToast('✓ ' + nextSeason + ' season started!');
+  });
+};
+
+
+// Start: load from Google Sheets then init
+if (SCRIPT_URL !== '__SCRIPT_URL__') {
+  loadFromSheet();
+} else {
+  initApp();
+}
+
+</script>
+</body>
+</html>
