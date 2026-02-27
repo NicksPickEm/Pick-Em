@@ -898,25 +898,11 @@ const participants = [
   "Rachel G","Kevin D","Amanda F","Steve H","Nicole J"
 ];
 
-const games = [
-  ["Alabama","Georgia"],["Ohio St","Michigan"],["Texas","Oklahoma"],
-  ["LSU","Auburn"],["USC","UCLA"],["Florida","Tennessee"],
-  ["Notre Dame","Miami"],["Penn St","Iowa"],["Clemson","NC State"],
-  ["Oregon","Washington"],["Nebraska","Wisconsin"],["TCU","Baylor"],
-  ["Oklahoma St","Kansas St"]
-];
+const games = Array.from({length:13}, () => ["",""]); // filled from sheet
 // favorites[gi] = 0 means games[gi][0] is the favorite, 1 means games[gi][1] is favorite
 const favorites = [0,0,0,0,0,1,0,0,0,0,1,0,1];
 
-const results = {
-  1:[0,1,0,1,0,1,0,1,0,1,0,1,0],
-  2:[1,0,1,0,1,0,1,0,1,0,1,0,1],
-  3:[0,0,1,1,0,0,1,1,0,0,1,1,0],
-  4:[1,1,0,0,1,1,0,0,1,1,0,0,1],
-  5:[0,1,1,0,0,1,1,0,0,1,1,0,0],
-  6:[1,0,0,1,1,0,0,1,1,0,0,1,1],
-  7:[0,1,0,1,0,1,0,1,0,1,0,1,0],
-};
+const results = {};
 
 function rando(seed) {
   let x = Math.sin(seed) * 10000;
@@ -924,17 +910,11 @@ function rando(seed) {
 }
 
 const picks = {};
-for (let w = 1; w <= WEEKS; w++) {
-  picks[w] = {};
-  participants.forEach((p, pi) => {
-    picks[w][p] = games.map((_, gi) => rando(pi * 100 + gi * 7 + w * 1000));
-  });
-}
 
 // Tiebreaker guesses: tbGuesses[week][participant] = number
 // Actual combined score of final game: tbActual[week] = number
 const tbGuesses = {};
-const tbActual = { 1:47, 2:52, 3:38, 4:61, 5:44, 6:55, 7:49 };
+const tbActual = {};
 for (let w = 1; w <= WEEKS; w++) {
   tbGuesses[w] = {};
   participants.forEach((p, pi) => {
