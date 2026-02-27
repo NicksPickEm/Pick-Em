@@ -149,6 +149,7 @@
   <button class="nav-btn" onclick="showPage('distribution',this)">Pick Distribution</button>
   <button class="nav-btn" onclick="showPage('charts',this)">Charts</button>
   <button class="nav-btn" onclick="showPage('records',this)">Hall of Records</button>
+  <button class="nav-btn" onclick="showPage('rules',this)">Rules &amp; About</button>
   <button class="nav-btn admin-nav-btn" onclick="showAdminLogin(this)">&#9881; Admin</button>
 </div>
 
@@ -274,6 +275,154 @@
   </div>
 </div>
 
+<div class="page" id="page-rules">
+  <div class="section-title">Rules &amp; About</div>
+
+  <!-- Commissioner Card -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;display:flex;align-items:center;gap:16px">
+    <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#0ea5e9);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:22px;color:#0a1e2e;flex-shrink:0">NP</div>
+    <div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;color:var(--text)">Commissioner: Nick P</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px">Questions, submissions &amp; disputes</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px">
+        <a href="mailto:Npicaut86@gmail.com" style="font-size:12px;color:var(--accent);text-decoration:none;display:flex;align-items:center;gap:4px">&#9993; Npicaut86@gmail.com</a>
+        <a href="tel:3862957913" style="font-size:12px;color:var(--accent);text-decoration:none;display:flex;align-items:center;gap:4px">&#128222; 386-295-7913</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Entry & Payouts -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--accent);margin-bottom:14px">&#128176; Entry &amp; Payouts</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--gold)">$50</div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">One-Time Entry Fee</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--green)">$50</div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Weekly Prize</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px">Season Prize Pool (after weekly prizes)</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold);width:28px;text-align:center">1</div>
+        <div style="flex:1;background:var(--surface2);border-radius:6px;height:8px;overflow:hidden"><div style="width:60%;height:100%;background:var(--gold);border-radius:6px"></div></div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--gold)">60%</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--silver);width:28px;text-align:center">2</div>
+        <div style="flex:1;background:var(--surface2);border-radius:6px;height:8px;overflow:hidden"><div style="width:30%;height:100%;background:var(--silver);border-radius:6px"></div></div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--silver)">30%</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--bronze);width:28px;text-align:center">3</div>
+        <div style="flex:1;background:var(--surface2);border-radius:6px;height:8px;overflow:hidden"><div style="width:10%;height:100%;background:var(--bronze);border-radius:6px"></div></div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--bronze)">10%</div>
+      </div>
+    </div>
+    <div style="margin-top:14px;padding:12px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--muted);line-height:1.6">
+      Entry is by invitation only — word of mouth from existing players. No mid-season joins.
+    </div>
+  </div>
+
+  <!-- Scoring -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--accent);margin-bottom:14px">&#127944; Scoring</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface2);border-radius:8px">
+        <span style="font-size:13px;color:var(--text)">Regular game correct pick</span>
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--green)">1 PT</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface2);border-radius:8px;border:1px solid rgba(251,191,36,.3)">
+        <div>
+          <span style="font-size:13px;color:var(--text)">2-Point game correct pick</span>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">Commissioner designates 3 games per week</div>
+        </div>
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold)">2 PTS</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface2);border-radius:8px">
+        <span style="font-size:13px;color:var(--text)">Max points per week</span>
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--accent)">16 PTS</span>
+      </div>
+    </div>
+    <div style="margin-top:12px;padding:12px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--muted);line-height:1.6">
+      Each week has 13 games. 10 are worth 1 point each, and 3 are designated as 2-point games by the commissioner. The 2-point games are announced in advance. Maximum 16 points per week.
+    </div>
+  </div>
+
+  <!-- Pick Submission -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--accent);margin-bottom:14px">&#128221; Submitting Picks</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="padding:12px 14px;background:var(--surface2);border-radius:8px;font-size:13px;color:var(--text);line-height:1.6">
+        Submit picks via <strong style="color:var(--accent)">text or email</strong> to the commissioner. A receipt will be provided to confirm your picks were received.
+      </div>
+      <div style="padding:12px 14px;background:var(--surface2);border-radius:8px">
+        <div style="font-size:12px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">&#9200; Deadlines</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.8">
+          <div>&#9679; <strong>Thursday/Friday games:</strong> Picks lock at kickoff</div>
+          <div>&#9679; <strong>All other games:</strong> Picks lock at noon Saturday</div>
+          <div>&#9679; You may change picks up until the applicable deadline</div>
+          <div>&#9679; Missing a deadline = that game is scored as wrong</div>
+        </div>
+      </div>
+      <div style="padding:12px 14px;background:var(--surface2);border-radius:8px;font-size:13px;color:var(--text);line-height:1.6">
+        &#128065; Picks are <strong style="color:var(--accent)">hidden until each game kicks off</strong>, then revealed to all players.
+      </div>
+    </div>
+  </div>
+
+  <!-- Weekly Prize & Tiebreakers -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--accent);margin-bottom:14px">&#127942; Weekly Prize &amp; Tiebreakers</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="padding:12px 14px;background:var(--surface2);border-radius:8px;font-size:13px;color:var(--text);line-height:1.6">
+        The player with the <strong>most points in that week</strong> wins $50, paid out each week.
+      </div>
+      <div style="padding:12px 14px;background:var(--surface2);border-radius:8px">
+        <div style="font-size:12px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">If tied for weekly prize:</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.8">
+          <div>1&#65039;&#8419; Tiebreaker guess — closest to actual final score (over or under both count)</div>
+          <div style="margin-top:6px">2&#65039;&#8419; If still tied, players choose to <strong style="color:var(--green)">split the prize</strong> or <strong style="color:var(--gold)">roll it over</strong> to next week</div>
+        </div>
+      </div>
+      <div style="padding:12px 14px;background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.2);border-radius:8px;font-size:12px;color:var(--muted);line-height:1.6">
+        <strong style="color:var(--gold)">Rollover rule:</strong> If rolled over, the tied players' Week N scores are compared head-to-head to settle the rollover prize — independent of that week's main prize which remains open to all. If a player doesn't submit picks in the rollover week, they forfeit their share. Default if no agreement: split.
+      </div>
+    </div>
+  </div>
+
+  <!-- Season Tiebreaker -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--accent);margin-bottom:14px">&#128200; Season Standings &amp; Tiebreaker</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="padding:12px 14px;background:var(--surface2);border-radius:8px;font-size:13px;color:var(--text);line-height:1.6">
+        Season standings are determined by <strong>total correct picks</strong> across all 14 weeks.
+      </div>
+      <div style="padding:12px 14px;background:var(--surface2);border-radius:8px">
+        <div style="font-size:12px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">If tied for season position:</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.8">
+          <strong style="color:var(--accent)">Upset %</strong> — number of upsets correctly predicted ÷ total upsets that occurred during the season. Highest % wins. If still tied, the prize is split evenly.
+        </div>
+      </div>
+      <div style="padding:12px 14px;background:rgba(56,189,248,.07);border:1px solid rgba(56,189,248,.2);border-radius:8px;font-size:12px;color:var(--muted);line-height:1.6">
+        An "upset" is any game where the underdog (non-favorite as designated by the commissioner) wins. Upset % is tracked as a live stat all season long.
+      </div>
+    </div>
+  </div>
+
+  <!-- Commissioner Authority -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--accent);margin-bottom:10px">&#9878; Commissioner Authority</div>
+    <div style="padding:12px 14px;background:var(--surface2);border-radius:8px;font-size:13px;color:var(--text);line-height:1.6">
+      The commissioner has final say on all disputes, rulings, and interpretations of the rules. No exceptions.
+    </div>
+  </div>
+
+</div>
+
 <div class="page" id="page-admin">
   <div class="section-title">Admin Panel</div>
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
@@ -327,7 +476,7 @@
 <script>
 // Admin password check
 const ADMIN_PASS = 'admin123';
-let adminWeek = 7;
+let adminWeek = 1;
 let pendingPicks = {};
 let adminLastBtn = null;
 
@@ -877,7 +1026,7 @@ function teamBadge(teamName, status) {
 }
 
 const WEEKS = 7;
-const CURRENT_WEEK = 7;
+const CURRENT_WEEK = 1;
 let CURRENT_SEASON = new Date().getFullYear();
 let activeSeason = CURRENT_SEASON; // which season is being viewed
 let availableSeasons = [CURRENT_SEASON]; // all seasons in sheet
