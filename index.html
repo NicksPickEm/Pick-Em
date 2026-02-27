@@ -1848,22 +1848,26 @@ function apiCall(params, callback) {
 function loadFromSheet() {
   const loading = document.getElementById('loading-overlay');
   if (loading) loading.style.display = 'flex';
-  // First load available seasons, then load data
+  showToast('Connecting to sheet...');
   apiCall({ action: 'readSeasons' }, function(seasonsData) {
     if (seasonsData && seasonsData.seasons) {
       availableSeasons = seasonsData.seasons;
       CURRENT_SEASON = Math.max(...availableSeasons);
       activeSeason = CURRENT_SEASON;
       renderSeasonSelector();
+      showToast('Seasons loaded: ' + availableSeasons.join(', '));
+    } else {
+      showToast('⚠️ Could not load seasons');
     }
   });
   apiCall({ action: 'read', season: activeSeason }, function(data) {
     if (loading) loading.style.display = 'none';
     if (!data) {
-      showToast('Could not load data from Google Sheets. Using demo data.');
+      showToast('⚠️ Sheet load failed - using demo data');
       initApp();
       return;
     }
+    showToast('✓ Loaded ' + (data.participants||[]).length + ' players');
     applySheetData(data);
     initApp();
   });
