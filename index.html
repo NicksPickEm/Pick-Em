@@ -750,6 +750,7 @@ const FBS_TEAMS = {
   "Northwestern":      { abbr: "NW",   nick: "WILDCATS",bg: "#4e2a84", border: "#fff", text: "#fff" },
   "Ohio State":        { abbr: "OSU",  nick: "BUCKEYES",bg: "#bb0000", border: "#666", text: "#fff" },
   "Oregon":            { abbr: "ORE",  nick: "DUCKS",   bg: "#154733", border: "#fed331", text: "#fed331" },
+  "Oregon State":     { abbr: "ORST", nick: "BEAVERS", bg: "#dc4405", border: "#000000", text: "#fff" },
   "Penn State":        { abbr: "PSU",  nick: "NITTNYLNS",bg: "#041e42", border: "#fff", text: "#fff" },
   "Purdue":            { abbr: "PUR",  nick: "BOILRMKRS",bg: "#cfb991", border: "#000", text: "#000" },
   "Rutgers":           { abbr: "RU",   nick: "SCARLET K",bg: "#cc0033", border: "#000", text: "#fff" },
@@ -1863,6 +1864,7 @@ function loadFromSheet() {
       renderSeasonSelector();
     }
     // NOW load data with the correct season
+    showToast('Reading season: ' + activeSeason);
     apiCall({ action: 'read', season: activeSeason }, function(data) {
       if (loading) loading.style.display = 'none';
       if (!data) {
@@ -1870,7 +1872,7 @@ function loadFromSheet() {
         initApp();
         return;
       }
-      showToast('✓ Loaded ' + (data.participants||[]).length + ' players');
+      showToast('✓ Loaded ' + (data.participants||[]).length + ' players from season ' + activeSeason);
       applySheetData(data);
       initApp();
     });
