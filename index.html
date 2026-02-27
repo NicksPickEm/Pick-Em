@@ -1854,27 +1854,26 @@ function loadFromSheet() {
   const loading = document.getElementById('loading-overlay');
   if (loading) loading.style.display = 'flex';
   showToast('Connecting to sheet...');
+  // Load seasons FIRST, then load data for the correct season
   apiCall({ action: 'readSeasons' }, function(seasonsData) {
-    if (seasonsData && seasonsData.seasons) {
+    if (seasonsData && seasonsData.seasons && seasonsData.seasons.length) {
       availableSeasons = seasonsData.seasons;
       CURRENT_SEASON = Math.max(...availableSeasons);
       activeSeason = CURRENT_SEASON;
       renderSeasonSelector();
-      showToast('Seasons loaded: ' + availableSeasons.join(', '));
-    } else {
-      showToast('⚠️ Could not load seasons');
     }
-  });
-  apiCall({ action: 'read', season: activeSeason }, function(data) {
-    if (loading) loading.style.display = 'none';
-    if (!data) {
-      showToast('⚠️ Sheet load failed - using demo data');
+    // NOW load data with the correct season
+    apiCall({ action: 'read', season: activeSeason }, function(data) {
+      if (loading) loading.style.display = 'none';
+      if (!data) {
+        showToast('⚠️ Sheet load failed - using demo data');
+        initApp();
+        return;
+      }
+      showToast('✓ Loaded ' + (data.participants||[]).length + ' players');
+      applySheetData(data);
       initApp();
-      return;
-    }
-    showToast('✓ Loaded ' + (data.participants||[]).length + ' players');
-    applySheetData(data);
-    initApp();
+    });
   });
 }
 
