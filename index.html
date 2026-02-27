@@ -1882,6 +1882,7 @@ function applySheetData(data) {
   if (data.participants !== undefined) {
     participants.length = 0;
     (data.participants || []).forEach(p => participants.push(p));
+    renderPlayersList(); // refresh if Players tab is open
   }
   adminGamesLoaded = true;
   if (data.games) sheetGames = data.games;
