@@ -528,8 +528,11 @@ function renderAdminPicks() {
     tbody += '<tr><td class="name-col" style="position:sticky;left:0;z-index:2;background:var(--surface)">' + p + '</td>';
     weekGames.forEach(function(g, gi) {
       var curPick = (picks[adminWeek] && picks[adminWeek][p] && picks[adminWeek][p][gi] !== null) ? picks[adminWeek][p][gi] : null;
+      const p2pts = (playerDoubles[adminWeek] && playerDoubles[adminWeek][p]) || [];
+      const isP2PT = p2pts.includes(gi);
+      const p2ptBtn = '<button onclick="togglePlayer2PT(' + pi + ',' + gi + ',event)" style="display:block;margin:2px auto 0;font-size:9px;padding:1px 5px;border-radius:4px;border:1px solid ' + (isP2PT ? 'var(--accent)' : 'var(--border)') + ';background:' + (isP2PT ? 'var(--accent)' : 'transparent') + ';color:' + (isP2PT ? '#000' : 'var(--muted)') + ';cursor:pointer;font-weight:700">2PT</button>';
       tbody += '<td class="admin-pick-cell" data-pi="' + pi + '" data-gi="' + gi + '" onclick="toggleAdminPick(this)" style="cursor:pointer;padding:4px;text-align:center">' +
-        adminPickBadge(g, curPick) + '</td>';
+        adminPickBadge(g, curPick) + p2ptBtn + '</td>';
     });
     var tbVal = (tbGuesses[adminWeek] && tbGuesses[adminWeek][p]) ? tbGuesses[adminWeek][p] : '';
     tbody += '<td style="padding:4px"><input type="number" value="' + tbVal + '" min="0" max="150" data-pi="' + pi + '" ' +
@@ -540,6 +543,26 @@ function renderAdminPicks() {
   tbody += '</tbody>';
   document.getElementById('admin-picks-table').innerHTML = thead + tbody;
 }
+
+
+window.togglePlayer2PT = function(pi, gi, event) {
+  event.stopPropagation(); // don't trigger pick toggle
+  const p = participants[pi];
+  if (!playerDoubles[adminWeek]) playerDoubles[adminWeek] = {};
+  if (!playerDoubles[adminWeek][p]) playerDoubles[adminWeek][p] = [];
+  const arr = playerDoubles[adminWeek][p];
+  const idx = arr.indexOf(gi);
+  if (idx > -1) {
+    arr.splice(idx, 1); // remove 2PT
+  } else {
+    if (arr.length >= 3) {
+      showAdminMsg('⚠️ ' + p + ' already has 3 two-point games.');
+      return;
+    }
+    arr.push(gi); // add 2PT
+  }
+  renderAdminPicks(); // re-render to update button state
+};
 
 window.updateTbGuessIdx = function(pi, val) {
   var p = participants[pi];
@@ -857,6 +880,7 @@ let sheetGames = {};
 let sheetFavorites = {};
 let sheetDoubleGames = {};
 let sheetNeutralGames = {};
+let playerDoubles = {}; // playerDoubles[week][playerName] = [gi, gi, ...] - per-player 2PT for 2025
 const DOUBLE_GAMES = [0, 1, 2];
 let NEUTRAL_GAMES = []; // game indices that are neutral site
 
@@ -937,8 +961,12 @@ function weekWinner(week) {
 
 function weekScore(week, participant) {
   if (!results[week]) return 0;
+  if (!picks[week] || !picks[week][participant]) return 0;
+  const weekDbls = (playerDoubles[week] && playerDoubles[week][participant])
+    ? playerDoubles[week][participant]
+    : (sheetDoubleGames[week] || DOUBLE_GAMES);
   return picks[week][participant].reduce((sum, pick, gi) =>
-    sum + (pick === results[week][gi] ? (DOUBLE_GAMES.includes(gi) ? 2 : 1) : 0), 0);
+    sum + (pick === results[week][gi] ? (weekDbls.includes(gi) ? 2 : 1) : 0), 0);
 }
 
 // Season standings through all weeks
@@ -1907,7 +1935,7 @@ function savePicksToSheet(week) {
   apiCall({
     action: 'savePicks',
     season: CURRENT_SEASON,
-    data: { week, picks: weekPicks, tbGuesses: tbMap }
+    data: { week, picks: weekPicks, tbGuesses: tbMap, playerDoubles: playerDoubles[week] || {} }
   }, d => showToast(d ? '✓ Picks saved to sheet' : '⚠️ Sheet save failed'));
 }
 
@@ -2141,6 +2169,9 @@ function applySheetData(data) {
   if (data.favorites) sheetFavorites = data.favorites;
   if (data.doubleGames) sheetDoubleGames = data.doubleGames;
   if (data.neutralGames) sheetNeutralGames = data.neutralGames;
+  if (data.playerDoubles) {
+    Object.keys(data.playerDoubles).forEach(w => { playerDoubles[w] = data.playerDoubles[w]; });
+  }
   if (data.games && data.games[CURRENT_WEEK]) {
     const wg = data.games[CURRENT_WEEK];
     for (let gi = 0; gi < 13; gi++) { if (wg[gi]) games[gi] = wg[gi]; }
