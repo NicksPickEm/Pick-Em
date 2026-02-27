@@ -2230,7 +2230,7 @@ function applySheetData(data) {
     data.playerIds.forEach(id => playerIds.push(id));
     buildParticipantsFromIndex();
   } else if (data.participants !== undefined && data.participants.length > 0) {
-    // Legacy: no ID index yet — auto-assign IDs
+    // Legacy: assign IDs in memory only, don't save yet
     participants.length = 0;
     playerIds.length = 0;
     Object.keys(playerIndex).forEach(k => delete playerIndex[k]);
@@ -2240,15 +2240,25 @@ function applySheetData(data) {
       playerIds.push(id);
       participants.push(name);
     });
-    // Auto-save the new index to sheet
-    savePlayerIndex();
   }
   renderPlayersList();
   adminGamesLoaded = true;
-  if (data.games) sheetGames = data.games;
-  if (data.favorites) sheetFavorites = data.favorites;
-  if (data.doubleGames) sheetDoubleGames = data.doubleGames;
-  if (data.neutralGames) sheetNeutralGames = data.neutralGames;
+  if (data.games) {
+    sheetGames = {};
+    Object.keys(data.games).forEach(k => sheetGames[Number(k)] = data.games[k]);
+  }
+  if (data.favorites) {
+    sheetFavorites = {};
+    Object.keys(data.favorites).forEach(k => sheetFavorites[Number(k)] = data.favorites[k]);
+  }
+  if (data.doubleGames) {
+    sheetDoubleGames = {};
+    Object.keys(data.doubleGames).forEach(k => sheetDoubleGames[Number(k)] = data.doubleGames[k]);
+  }
+  if (data.neutralGames) {
+    sheetNeutralGames = {};
+    Object.keys(data.neutralGames).forEach(k => sheetNeutralGames[Number(k)] = data.neutralGames[k]);
+  }
   if (data.playerDoubles) {
     Object.keys(data.playerDoubles).forEach(w => { playerDoubles[w] = data.playerDoubles[w]; });
   }
@@ -2269,10 +2279,10 @@ function applySheetData(data) {
   if (data.picks) {
     Object.keys(picks).forEach(k => delete picks[k]);
     Object.keys(data.picks).forEach(w => {
-      picks[w] = {};
+      picks[Number(w)] = {};
       Object.keys(data.picks[w]).forEach(p => {
-        const arr = data.picks[w][p];
-        picks[w][p] = arr.slice(0,13);
+        const arr = data.picks[Number(w)][p];
+        picks[Number(w)][p] = arr.slice(0,13);
         const tb = arr[13];
         if (tb !== null && tb !== undefined) {
           if (!tbGuesses[w]) tbGuesses[w] = {};
