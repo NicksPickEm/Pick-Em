@@ -415,6 +415,8 @@ function renderAdminGames() {
     const weekDbls = sheetDoubleGames[adminWeek] || [];
     const isFav0 = (weekFavs[gi] || 0) === 0;
     const isDbl = weekDbls.includes(gi);
+    const weekNeutrals = sheetNeutralGames[adminWeek] || [];
+    const isNeutral = weekNeutrals.includes(gi);
     html += '<div style="margin-bottom:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px">' +
       '<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">' +
         '<span style="font-family:Bebas Neue,sans-serif;font-size:18px;color:var(--muted);width:20px;flex-shrink:0">' + (gi + 1) + '</span>' +
@@ -428,6 +430,7 @@ function renderAdminGames() {
         '</label>' +
         '<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--accent);cursor:pointer">' +
           '<input type="checkbox" id="ag-dbl-' + gi + '"' + (isDbl ? ' checked' : '') + ' onchange="onDblChange(' + gi + ')" style="accent-color:var(--accent)"> 2PT game' +
+      '<span style="margin-left:12px"><input type="checkbox" id="ag-ntl-' + gi + '"' + (isNeutral ? ' checked' : '') + ' style="accent-color:var(--muted)"> Neutral site</span>' +
         '</label>' +
       '</div>' +
     '</div>';
@@ -495,6 +498,13 @@ function saveGamesSetup() {
     } else {
       if (dblIdx > -1) DOUBLE_GAMES.splice(dblIdx, 1);
     }
+    const ntlEl = document.getElementById('ag-ntl-' + gi);
+    const ntlIdx = NEUTRAL_GAMES.indexOf(gi);
+    if (ntlEl && ntlEl.checked) {
+      if (ntlIdx === -1) NEUTRAL_GAMES.push(gi);
+    } else {
+      if (ntlIdx > -1) NEUTRAL_GAMES.splice(ntlIdx, 1);
+    }
   }
   picks[adminWeek] = {};
   participants.forEach(p => { picks[adminWeek][p] = Array(13).fill(null); });
@@ -508,7 +518,8 @@ function renderAdminPicks() {
   let thead = '<thead><tr><th class="name-col" style="position:sticky;left:0;z-index:3;background:var(--surface2)">Participant</th>';
   weekGames.forEach(function(g, gi) {
     var isDbl = DOUBLE_GAMES.includes(gi);
-    thead += '<th style="min-width:52px;font-size:10px">' + g[0].slice(0,4).toUpperCase() + '<br><span style="opacity:0.4">vs</span><br>' + g[1].slice(0,4).toUpperCase() + (isDbl ? '<span class="dbl">2PT</span>' : '') + '</th>';
+    const sep1 = NEUTRAL_GAMES.includes(gi) ? '<span style="opacity:0.4">vs</span>' : '<span style="opacity:0.4">@</span>';
+    thead += '<th style="min-width:52px;font-size:10px">' + g[0].slice(0,4).toUpperCase() + '<br>' + sep1 + '<br>' + g[1].slice(0,4).toUpperCase() + (isDbl ? '<span class="dbl">2PT</span>' : '') + (NEUTRAL_GAMES.includes(gi) ? '<span style="display:block;font-size:8px;color:var(--muted)">(N)</span>' : '') + '</th>';
   });
   thead += '<th style="min-width:52px;color:var(--gold);font-size:10px">TB<br>GUESS</th></tr></thead>';
 
@@ -585,7 +596,7 @@ function renderAdminResults() {
 
   // Tiebreaker - show which game it's for (last game)
   const tbGame = games[games.length - 1];
-  const tbGameLabel = tbGame ? tbGame[0] + ' vs ' + tbGame[1] : 'Final Game';
+  const tbGameLabel = tbGame ? gameLabelPlain(games.length - 1, games, sheetNeutralGames[adminWeek] || NEUTRAL_GAMES) : 'Final Game';
   const tbCur = tbActual[adminWeek] || '';
   document.getElementById('admin-tb-wrap').innerHTML =
     '<div style="margin:16px 0;background:var(--surface);border:1px solid var(--gold);border-radius:10px;padding:14px">' +
@@ -844,7 +855,9 @@ let adminGamesLoaded = false;
 let sheetGames = {};
 let sheetFavorites = {};
 let sheetDoubleGames = {};
+let sheetNeutralGames = {};
 const DOUBLE_GAMES = [0, 1, 2];
+let NEUTRAL_GAMES = []; // game indices that are neutral site
 
 // Admin pending state (initialized after data is ready)
 let pendingGames, pendingFavorites, pendingDoubleGames;
@@ -990,6 +1003,23 @@ for (let w = 1; w <= WEEKS; w++) {
   weeklyWinners[w] = { name: best, score: bestScore };
 }
 
+
+// Returns "Away @ Home" or "Away vs Home (N)" for neutral site
+function gameLabel(gi, gamesArr, neutralArr) {
+  const g = (gamesArr || games)[gi];
+  if (!g || !g[0]) return 'TBD';
+  const ntl = (neutralArr || NEUTRAL_GAMES).includes(gi);
+  if (ntl) return g[0] + ' vs ' + g[1] + ' <span style="font-size:10px;color:var(--muted)">(N)</span>';
+  return g[0] + ' @ ' + g[1];
+}
+
+function gameLabelPlain(gi, gamesArr, neutralArr) {
+  const g = (gamesArr || games)[gi];
+  if (!g || !g[0]) return 'TBD';
+  const ntl = (neutralArr || NEUTRAL_GAMES).includes(gi);
+  return ntl ? g[0] + ' vs ' + g[1] + ' (N)' : g[0] + ' @ ' + g[1];
+}
+
 function renderStandings() {
   const maxPts = seasonData[0]?.pts || 1;
   const leader = seasonData[0]?.pts || 0;
@@ -1102,6 +1132,7 @@ function sortPicksByCol(week, col) {
 function renderPicksTable(week) {
   buildWeekPills('week-selector', week, 'renderPicks');
   const res = results[week];
+  const weekNeutralGames = sheetNeutralGames[week] || NEUTRAL_GAMES;
 
   // Compute winner info up front so sort can use it
   const winnerInfo = res ? weekWinner(week) : null;
@@ -1146,7 +1177,9 @@ function renderPicksTable(week) {
     const isActive = picksSort.col === gi;
     const arrow = isActive ? (picksSort.dir === 1 ? ' ▲' : ' ▼') : '';
     const activeStyle = isActive ? 'color:var(--accent);cursor:pointer' : 'cursor:pointer';
-    return `<th style="${activeStyle}" onclick="sortPicksByCol(${week}, ${gi})">${g[0].slice(0,4).toUpperCase()}<br><span style="font-size:9px;opacity:0.4">vs</span><br>${g[1].slice(0,4).toUpperCase()}${isDbl ? `<span class="dbl">2PT</span>` : ''}${arrow ? `<span style="font-size:9px">${arrow}</span>` : ''}</th>`;
+    const isNtl852 = weekNeutralGames.includes(gi);
+    const sep852 = isNtl852 ? `<span style="font-size:9px;opacity:0.4">vs</span>` : `<span style="font-size:9px;opacity:0.4">@</span>`;
+    return `<th style="${activeStyle}" onclick="sortPicksByCol(${week}, ${gi})">${g[0].slice(0,4).toUpperCase()}<br>${sep852}<br>${g[1].slice(0,4).toUpperCase()}${isDbl ? `<span class="dbl">2PT</span>` : ''}${isNtl852 ? `<span style="display:block;font-size:8px;color:var(--muted)">(N)</span>` : ''}${arrow ? `<span style="font-size:9px">${arrow}</span>` : ''}</th>`;
   });
 
   // Tiebreaker header
@@ -1690,7 +1723,9 @@ function openPlayer(name) {
 
   const gameHeaders = games.map((g, gi) => {
     const isDbl = DOUBLE_GAMES.includes(gi);
-    return `<th>${g[0].slice(0,4).toUpperCase()}<br><span style="font-size:9px;opacity:0.4">vs</span><br>${g[1].slice(0,4).toUpperCase()}${isDbl ? `<span class="dbl">2PT</span>` : ''}</th>`;
+    const isNtl1396 = NEUTRAL_GAMES.includes(gi);
+    const sep1396 = isNtl1396 ? `<span style="font-size:9px;opacity:0.4">vs</span>` : `<span style="font-size:9px;opacity:0.4">@</span>`;
+    return `<th>${g[0].slice(0,4).toUpperCase()}<br>${sep1396}<br>${g[1].slice(0,4).toUpperCase()}${isDbl ? `<span class="dbl">2PT</span>` : ''}${isNtl1396 ? `<span style="display:block;font-size:8px;color:var(--muted)">(N)</span>` : ''}</th>`;
   }).join('');
 
   document.getElementById('player-content').innerHTML = `
@@ -1845,10 +1880,12 @@ function showToast(msg) {
 function saveGamesToSheet(week) {
   const dbl = [];
   DOUBLE_GAMES.forEach(gi => dbl.push(gi));
+  const ntl = [];
+  NEUTRAL_GAMES.forEach(gi => ntl.push(gi));
   apiCall({
     action: 'saveGames',
     season: CURRENT_SEASON,
-    data: { week, games, favorites, doubleGames: dbl }
+    data: { week, games, favorites, doubleGames: dbl, neutralGames: ntl }
   }, d => showToast(d ? '✓ Games saved to sheet' : '⚠️ Sheet save failed'));
 }
 
@@ -2093,6 +2130,7 @@ function applySheetData(data) {
   if (data.games) sheetGames = data.games;
   if (data.favorites) sheetFavorites = data.favorites;
   if (data.doubleGames) sheetDoubleGames = data.doubleGames;
+  if (data.neutralGames) sheetNeutralGames = data.neutralGames;
   if (data.games && data.games[CURRENT_WEEK]) {
     const wg = data.games[CURRENT_WEEK];
     for (let gi = 0; gi < 13; gi++) { if (wg[gi]) games[gi] = wg[gi]; }
@@ -2102,6 +2140,10 @@ function applySheetData(data) {
   if (data.doubleGames && data.doubleGames[CURRENT_WEEK]) {
     DOUBLE_GAMES.length = 0;
     data.doubleGames[CURRENT_WEEK].forEach(gi => DOUBLE_GAMES.push(gi));
+  }
+  if (data.neutralGames && data.neutralGames[CURRENT_WEEK]) {
+    NEUTRAL_GAMES.length = 0;
+    data.neutralGames[CURRENT_WEEK].forEach(gi => NEUTRAL_GAMES.push(gi));
   }
   if (data.picks) {
     Object.keys(picks).forEach(k => delete picks[k]);
