@@ -663,25 +663,34 @@ function renderPlayersList() {
     list.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:12px 0">No players yet. Add some above.</div>';
     return;
   }
-  list.innerHTML = participants.map((p, i) =>
-    '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:4px">' +
-      '<span style="font-weight:600;font-size:14px">' + p + '</span>' +
-      '<button onclick="removePlayer(' + i + ')" style="background:transparent;border:1px solid var(--red);color:var(--red);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;font-weight:700">✕</button>' +
-    '</div>'
-  ).join('');
+  list.innerHTML = participants.map((p, i) => {
+    const id = playerIds[i] || '';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:4px">' +
+      '<div style="display:flex;align-items:center;gap:10px">' +
+        '<span style="font-size:10px;color:var(--muted);font-family:monospace">' + id + '</span>' +
+        '<span style="font-weight:600;font-size:14px">' + p + '</span>' +
+      '</div>' +
+      '<div style="display:flex;gap:6px">' +
+        '<button onclick="renamePlayer(this.dataset.id)" data-id="' + id + '" style="background:transparent;border:1px solid var(--accent);color:var(--accent);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;font-weight:700">✎ Rename</button>' +
+        '<button onclick="removePlayer(' + i + ')" style="background:transparent;border:1px solid var(--red);color:var(--red);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;font-weight:700">✕</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
 }
 
 window.addPlayer = function() {
   const input = document.getElementById('new-player-input');
   const name = input.value.trim();
   if (!name) return;
-  // Case-insensitive duplicate check
-  const dupe = participants.find(p => p.toLowerCase() === name.toLowerCase());
+  const dupe = Object.values(playerIndex).find(n => n.toLowerCase() === name.toLowerCase());
   if (dupe) {
     showAdminMsg('⚠️ "' + dupe + '" is already in the list.');
     input.select();
     return;
   }
+  const id = generatePlayerId(playerIds);
+  playerIndex[id] = name;
+  playerIds.push(id);
   participants.push(name);
   input.value = '';
   renderPlayersList();
@@ -691,20 +700,16 @@ window.addPlayer = function() {
 window.removePlayer = function(i) {
   const name = participants[i];
   if (!confirm('Remove ' + name + ' from the league? This cannot be undone.')) return;
+  const id = playerIds[i];
+  delete playerIndex[id];
+  playerIds.splice(i, 1);
   participants.splice(i, 1);
   renderPlayersList();
-  showToast('Removed ' + name);
 };
 
 function saveParticipantsToSheet() {
   showAdminMsg('Saving...');
-  apiCall({
-    action: 'saveParticipants',
-    season: CURRENT_SEASON,
-    data: { participants }
-  }, d => {
-    showAdminMsg(d ? '✓ ' + participants.length + ' players saved!' : '⚠️ Save failed');
-  });
+  savePlayerIndex();
 }
 
 
@@ -892,11 +897,9 @@ function initAdminState() {
   pendingDoubleGames = [...DOUBLE_GAMES];
 }
 
-const participants = [
-  "Mike T","Sarah K","Jake R","Laura M","Dave P",
-  "Chris B","Anna W","Tom S","Jessica L","Brian C",
-  "Rachel G","Kevin D","Amanda F","Steve H","Nicole J"
-];
+const participants = []; // loaded from sheet (display names, ordered)
+let playerIndex = {};   // {id: displayName} e.g. {p001: "Mike18"}
+let playerIds = [];     // ordered list of IDs matching participants array
 
 const games = Array.from({length:13}, () => ["",""]); // filled from sheet
 // favorites[gi] = 0 means games[gi][0] is the favorite, 1 means games[gi][1] is favorite
@@ -1936,6 +1939,86 @@ function initApp() {
 
 // ─── Season Management ───────────────────────────────────────────────────────
 
+// ─── Player Identity System ──────────────────────────────────────────────────
+// playerIndex: { id -> displayName }  e.g. { "p001": "Mike18" }
+// playerIds: ordered array of IDs matching participants array
+// participants: ordered array of current display names (derived from playerIndex)
+// All picks/results in sheet use display names as keys (legacy compat)
+// Renaming a player updates playerIndex + participants — sheet picks stay intact
+
+function generatePlayerId(existingIds) {
+  let n = existingIds.length + 1;
+  while (true) {
+    const id = 'p' + String(n).padStart(3, '0');
+    if (!existingIds.includes(id)) return id;
+    n++;
+  }
+}
+
+function buildParticipantsFromIndex() {
+  // Rebuild participants array from playerIds + playerIndex
+  participants.length = 0;
+  playerIds.forEach(id => {
+    if (playerIndex[id]) participants.push(playerIndex[id]);
+  });
+}
+
+function getPlayerName(id) {
+  return playerIndex[id] || id;
+}
+
+function getPlayerId(name) {
+  return playerIds.find(id => playerIndex[id] === name) || null;
+}
+
+function savePlayerIndex() {
+  apiCall({
+    action: 'savePlayerIndex',
+    season: CURRENT_SEASON,
+    data: { playerIndex, playerIds }
+  }, d => {
+    showAdminMsg(d ? '✓ Players saved!' : '⚠️ Save failed');
+  });
+}
+
+window.renamePlayer = function(id) {
+  const oldName = playerIndex[id];
+  const newName = prompt('Rename "' + oldName + '" to:', oldName);
+  if (!newName || newName.trim() === '' || newName.trim() === oldName) return;
+  const trimmed = newName.trim();
+  // Check for duplicate
+  const dupe = Object.values(playerIndex).find(n => n.toLowerCase() === trimmed.toLowerCase() && n !== oldName);
+  if (dupe) {
+    showAdminMsg('⚠️ "' + trimmed + '" already exists.');
+    return;
+  }
+  // Update all picks data to use new name
+  Object.keys(picks).forEach(w => {
+    if (picks[w][oldName] !== undefined) {
+      picks[w][trimmed] = picks[w][oldName];
+      delete picks[w][oldName];
+    }
+  });
+  Object.keys(tbGuesses).forEach(w => {
+    if (tbGuesses[w][oldName] !== undefined) {
+      tbGuesses[w][trimmed] = tbGuesses[w][oldName];
+      delete tbGuesses[w][oldName];
+    }
+  });
+  Object.keys(playerDoubles).forEach(w => {
+    if (playerDoubles[w][oldName] !== undefined) {
+      playerDoubles[w][trimmed] = playerDoubles[w][oldName];
+      delete playerDoubles[w][oldName];
+    }
+  });
+  playerIndex[id] = trimmed;
+  buildParticipantsFromIndex();
+  renderPlayersList();
+  savePlayerIndex();
+  showToast('✓ Renamed "' + oldName + '" → "' + trimmed + '"');
+};
+
+
 // ─── Hall of Records ─────────────────────────────────────────────────────────
 
 function showRecords() {
@@ -2139,11 +2222,28 @@ window.switchSeason = function(season) {
 };
 
 function applySheetData(data) {
-  if (data.participants !== undefined) {
+  if (data.playerIndex !== undefined && data.playerIds !== undefined) {
+    // New ID-based system
+    Object.keys(playerIndex).forEach(k => delete playerIndex[k]);
+    Object.assign(playerIndex, data.playerIndex);
+    playerIds.length = 0;
+    data.playerIds.forEach(id => playerIds.push(id));
+    buildParticipantsFromIndex();
+  } else if (data.participants !== undefined && data.participants.length > 0) {
+    // Legacy: no ID index yet — auto-assign IDs
     participants.length = 0;
-    (data.participants || []).forEach(p => participants.push(p));
-    renderPlayersList(); // refresh if Players tab is open
+    playerIds.length = 0;
+    Object.keys(playerIndex).forEach(k => delete playerIndex[k]);
+    (data.participants || []).forEach((name, i) => {
+      const id = 'p' + String(i + 1).padStart(3, '0');
+      playerIndex[id] = name;
+      playerIds.push(id);
+      participants.push(name);
+    });
+    // Auto-save the new index to sheet
+    savePlayerIndex();
   }
+  renderPlayersList();
   adminGamesLoaded = true;
   if (data.games) sheetGames = data.games;
   if (data.favorites) sheetFavorites = data.favorites;
