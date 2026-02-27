@@ -148,6 +148,7 @@
   <button class="nav-btn" onclick="showPage('picks',this)">Weekly Picks</button>
   <button class="nav-btn" onclick="showPage('distribution',this)">Pick Distribution</button>
   <button class="nav-btn" onclick="showPage('charts',this)">Charts</button>
+  <button class="nav-btn" onclick="showPage('records',this)">Hall of Records</button>
   <button class="nav-btn admin-nav-btn" onclick="showAdminLogin(this)">&#9881; Admin</button>
 </div>
 
@@ -237,6 +238,42 @@
 </div>
 
 <!-- Admin Page -->
+<div class="page" id="page-records">
+  <div class="section-title">Hall of Records</div>
+  <div id="records-loading" style="color:var(--muted);font-size:13px;padding:20px 0">Loading all-time stats...</div>
+  <div id="records-content" style="display:none">
+
+    <!-- All-Time Leaderboard -->
+    <div style="margin-bottom:32px">
+      <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">All-Time Leaderboard</div>
+      <div id="records-table-wrap" style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead>
+            <tr style="border-bottom:2px solid var(--border)">
+              <th style="text-align:left;padding:8px 10px;color:var(--muted);font-size:10px;letter-spacing:1px;white-space:nowrap">#</th>
+              <th style="text-align:left;padding:8px 10px;color:var(--muted);font-size:10px;letter-spacing:1px;white-space:nowrap">PLAYER</th>
+              <th style="text-align:center;padding:8px 10px;color:var(--muted);font-size:10px;letter-spacing:1px;white-space:nowrap">SEASONS</th>
+              <th style="text-align:center;padding:8px 10px;color:var(--muted);font-size:10px;letter-spacing:1px;white-space:nowrap">W-L</th>
+              <th style="text-align:center;padding:8px 10px;color:var(--gold);font-size:10px;letter-spacing:1px;white-space:nowrap">🏆 TITLES</th>
+              <th style="text-align:center;padding:8px 10px;color:var(--muted);font-size:10px;letter-spacing:1px;white-space:nowrap">TOP 3</th>
+              <th style="text-align:center;padding:8px 10px;color:var(--muted);font-size:10px;letter-spacing:1px;white-space:nowrap">WK WINS</th>
+              <th style="text-align:center;padding:8px 10px;color:var(--green);font-size:10px;letter-spacing:1px;white-space:nowrap">BEST SSN</th>
+              <th style="text-align:center;padding:8px 10px;color:var(--red);font-size:10px;letter-spacing:1px;white-space:nowrap">WORST SSN</th>
+              <th style="text-align:center;padding:8px 10px;color:var(--accent);font-size:10px;letter-spacing:1px;white-space:nowrap">PERFECT WKS</th>
+            </tr>
+          </thead>
+          <tbody id="records-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Record Holders Cards -->
+    <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">Record Holders</div>
+    <div id="record-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:32px"></div>
+
+  </div>
+</div>
+
 <div class="page" id="page-admin">
   <div class="section-title">Admin Panel</div>
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
@@ -604,14 +641,17 @@ window.addPlayer = function() {
   const input = document.getElementById('new-player-input');
   const name = input.value.trim();
   if (!name) return;
-  if (participants.includes(name)) {
-    showToast('⚠️ ' + name + ' is already in the list.');
+  // Case-insensitive duplicate check
+  const dupe = participants.find(p => p.toLowerCase() === name.toLowerCase());
+  if (dupe) {
+    showAdminMsg('⚠️ "' + dupe + '" is already in the list.');
+    input.select();
     return;
   }
   participants.push(name);
   input.value = '';
   renderPlayersList();
-  showToast('Added ' + name);
+  showAdminMsg('✓ Added ' + name);
 };
 
 window.removePlayer = function(i) {
@@ -623,13 +663,13 @@ window.removePlayer = function(i) {
 };
 
 function saveParticipantsToSheet() {
+  showAdminMsg('Saving...');
   apiCall({
     action: 'saveParticipants',
     season: CURRENT_SEASON,
     data: { participants }
   }, d => {
-    showToast(d ? '✓ Players saved to sheet' : '⚠️ Sheet save failed');
-    showAdminMsg(d ? '✓ Players saved!' : '⚠️ Save failed');
+    showAdminMsg(d ? '✓ ' + participants.length + ' players saved!' : '⚠️ Save failed');
   });
 }
 
@@ -1840,6 +1880,171 @@ function initApp() {
 }
 
 // ─── Season Management ───────────────────────────────────────────────────────
+
+// ─── Hall of Records ─────────────────────────────────────────────────────────
+
+function showRecords() {
+  const loading = document.getElementById('records-loading');
+  const content = document.getElementById('records-content');
+  if (!loading || !content) return;
+  loading.style.display = 'block';
+  content.style.display = 'none';
+  apiCall({ action: 'readSeasons' }, function(seasonsData) {
+    const seasons = (seasonsData && seasonsData.seasons) || [CURRENT_SEASON];
+    let pending = seasons.length;
+    const allData = {};
+    seasons.forEach(season => {
+      apiCall({ action: 'read', season }, function(data) {
+        allData[season] = data;
+        pending--;
+        if (pending === 0) {
+          renderRecords(allData);
+          loading.style.display = 'none';
+          content.style.display = 'block';
+        }
+      });
+    });
+  });
+}
+
+function isPerfectWeek(playerPicks, weekResults) {
+  if (!weekResults) return false;
+  for (let gi = 0; gi < 13; gi++) {
+    if (playerPicks[gi] === null || playerPicks[gi] === undefined) return false;
+    if (weekResults[gi] === null || weekResults[gi] === undefined) return false;
+    if (playerPicks[gi] !== weekResults[gi]) return false;
+  }
+  return true;
+}
+
+function computeWeekWinners(weekPicks, weekResults, weekDbl) {
+  if (!weekResults) return [];
+  let best = -1, winners = [];
+  Object.keys(weekPicks).forEach(p => {
+    let pts = 0;
+    const pks = weekPicks[p];
+    for (let gi = 0; gi < 13; gi++) {
+      if (pks[gi] !== null && pks[gi] !== undefined && weekResults[gi] !== null && weekResults[gi] !== undefined) {
+        pts += (pks[gi] === weekResults[gi] ? 1 : 0) * ((weekDbl||[]).includes(gi) ? 2 : 1);
+      }
+    }
+    if (pts > best) { best = pts; winners = [p]; }
+    else if (pts === best) winners.push(p);
+  });
+  return winners;
+}
+
+function renderRecords(allData) {
+  const stats = {};
+  const ensure = name => {
+    if (!stats[name]) stats[name] = { seasons:0, totalW:0, totalL:0, titles:0, top3:0, weekWins:0, seasonScores:[], perfectWeeks:0 };
+  };
+
+  Object.keys(allData).forEach(season => {
+    const data = allData[season];
+    if (!data) return;
+    const sParticipants = data.participants || [];
+    const sPicks = data.picks || {};
+    const sResults = data.results || {};
+    const sDbl = data.doubleGames || {};
+    const seasonScores = {};
+
+    sParticipants.forEach(p => {
+      ensure(p);
+      let totalPts = 0, totalW = 0, totalL = 0;
+      Object.keys(sResults).forEach(w => {
+        const weekRes = sResults[w];
+        const weekPks = (sPicks[w] || {})[p];
+        const weekDbl = sDbl[w] || [];
+        if (!weekPks || !weekRes) return;
+        let weekPts = 0;
+        for (let gi = 0; gi < 13; gi++) {
+          if (weekPks[gi] !== null && weekPks[gi] !== undefined && weekRes[gi] !== null && weekRes[gi] !== undefined) {
+            const correct = weekPks[gi] === weekRes[gi] ? 1 : 0;
+            const mult = weekDbl.includes(gi) ? 2 : 1;
+            weekPts += correct * mult;
+            totalW += correct;
+            totalL += (1 - correct);
+          }
+        }
+        totalPts += weekPts;
+        if (isPerfectWeek(weekPks, weekRes)) stats[p].perfectWeeks++;
+      });
+      Object.keys(sPicks).forEach(w => {
+        if (!sResults[w]) return;
+        const winners = computeWeekWinners(sPicks[w], sResults[w], sDbl[w] || []);
+        if (winners.includes(p)) stats[p].weekWins++;
+      });
+      seasonScores[p] = totalPts;
+      stats[p].totalW += totalW;
+      stats[p].totalL += totalL;
+    });
+
+    const ranked = Object.keys(seasonScores).sort((a,b) => seasonScores[b] - seasonScores[a]);
+    ranked.forEach((p, i) => {
+      ensure(p);
+      stats[p].seasons++;
+      stats[p].seasonScores.push(seasonScores[p]);
+      if (i === 0) stats[p].titles++;
+      if (i < 3) stats[p].top3++;
+    });
+  });
+
+  const players = Object.keys(stats).sort((a,b) =>
+    stats[b].titles !== stats[a].titles ? stats[b].titles - stats[a].titles : stats[b].totalW - stats[a].totalW
+  );
+
+  const tbody = document.getElementById('records-tbody');
+  tbody.innerHTML = players.map((p, i) => {
+    const s = stats[p];
+    const best = s.seasonScores.length ? Math.max(...s.seasonScores) : '-';
+    const worst = s.seasonScores.length ? Math.min(...s.seasonScores) : '-';
+    const titleStr = s.titles > 0 ? '🏆'.repeat(Math.min(s.titles,3)) + (s.titles > 3 ? ' x'+s.titles : '') : '-';
+    const bg = i === 0 ? 'background:rgba(255,215,0,0.07)' : i%2===0 ? 'background:var(--surface)' : '';
+    return '<tr style="border-bottom:1px solid var(--border);' + bg + '">' +
+      '<td style="padding:10px 8px;color:var(--muted);font-size:12px">' + (i+1) + '</td>' +
+      '<td style="padding:10px 8px;font-weight:700;font-size:14px;white-space:nowrap">' + p + '</td>' +
+      '<td style="padding:10px 8px;text-align:center;color:var(--muted)">' + s.seasons + '</td>' +
+      '<td style="padding:10px 8px;text-align:center;white-space:nowrap"><span style="color:var(--green)">' + s.totalW + '</span><span style="color:var(--muted)">-</span><span style="color:var(--red)">' + s.totalL + '</span></td>' +
+      '<td style="padding:10px 8px;text-align:center">' + titleStr + '</td>' +
+      '<td style="padding:10px 8px;text-align:center;color:var(--muted)">' + s.top3 + '</td>' +
+      '<td style="padding:10px 8px;text-align:center;color:var(--muted)">' + s.weekWins + '</td>' +
+      '<td style="padding:10px 8px;text-align:center;color:var(--green);font-weight:700">' + best + '</td>' +
+      '<td style="padding:10px 8px;text-align:center;color:var(--red)">' + worst + '</td>' +
+      '<td style="padding:10px 8px;text-align:center;color:var(--accent);font-weight:700">' + s.perfectWeeks + '</td>' +
+    '</tr>';
+  }).join('');
+
+  const findRecord = (fn, label, icon, color) => {
+    let best = null, holders = [];
+    players.forEach(p => {
+      const val = fn(stats[p]);
+      if (best === null || val > best) { best = val; holders = [p]; }
+      else if (val === best) holders.push(p);
+    });
+    return { label, icon, color, holders, value: best };
+  };
+
+  const cards = [
+    findRecord(s => s.titles, 'Most Titles', '🏆', 'var(--gold)'),
+    findRecord(s => s.totalW, 'Most All-Time Wins', '✅', 'var(--green)'),
+    findRecord(s => s.top3, 'Most Top 3 Finishes', '🥉', 'var(--accent)'),
+    findRecord(s => s.weekWins, 'Most Weekly Wins', '📅', 'var(--accent)'),
+    findRecord(s => s.seasonScores.length ? Math.max(...s.seasonScores) : 0, 'Best Season Score', '🔥', 'var(--green)'),
+    findRecord(s => s.seasonScores.length ? Math.min(...s.seasonScores) : 999, 'Worst Season Score', '💀', 'var(--red)'),
+    findRecord(s => s.perfectWeeks, 'Most Perfect Weeks', '💯', 'var(--accent)'),
+  ];
+
+  document.getElementById('record-cards').innerHTML = cards.map(r =>
+    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px">' +
+      '<div style="font-size:24px;margin-bottom:6px">' + r.icon + '</div>' +
+      '<div style="font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">' + r.label + '</div>' +
+      '<div style="font-size:15px;font-weight:700;color:' + r.color + ';margin-bottom:4px">' + r.holders.join(', ') + '</div>' +
+      '<div style="font-size:22px;font-weight:700;color:var(--text)">' + r.value + '</div>' +
+    '</div>'
+  ).join('');
+}
+
 
 function loadSeasons() {
   apiCall({ action: 'readSeasons' }, function(data) {
