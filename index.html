@@ -2222,7 +2222,7 @@ window.switchSeason = function(season) {
 };
 
 function applySheetData(data) {
-  if (data.playerIndex !== undefined && data.playerIds !== undefined) {
+  if (data.playerIndex && data.playerIds) {
     // New ID-based system
     Object.keys(playerIndex).forEach(k => delete playerIndex[k]);
     Object.assign(playerIndex, data.playerIndex);
