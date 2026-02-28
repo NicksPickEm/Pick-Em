@@ -285,7 +285,7 @@
       <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;color:var(--text)">Commissioner: Nick P</div>
       <div style="font-size:12px;color:var(--muted);margin-top:4px">Questions, submissions &amp; disputes</div>
       <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px">
-        <a href="mailto:Npicaut86@gmail.com" style="font-size:12px;color:var(--accent);text-decoration:none;display:flex;align-items:center;gap:4px">&#9993; Npicaut86@gmail.com</a>
+        <a href="/cdn-cgi/l/email-protection#7e300e171d1f0b0a46483e19131f1712501d1113" style="font-size:12px;color:var(--accent);text-decoration:none;display:flex;align-items:center;gap:4px">&#9993; <span class="__cf_email__" data-cfemail="4608362f252733327e7006212b272f2a6825292b">[email&#160;protected]</span></a>
         <a href="tel:3862957913" style="font-size:12px;color:var(--accent);text-decoration:none;display:flex;align-items:center;gap:4px">&#128222; 386-295-7913</a>
       </div>
     </div>
@@ -473,7 +473,7 @@
   <div id="admin-save-msg" style="margin-top:14px;font-size:13px;color:var(--green);min-height:20px;text-align:center"></div>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // Admin password check
 const ADMIN_PASS = 'admin123';
 let adminWeek = 1;
@@ -2410,7 +2410,7 @@ function applySheetData(data) {
     Object.keys(data.neutralGames).forEach(k => sheetNeutralGames[Number(k)] = data.neutralGames[k]);
   }
   if (data.playerDoubles) {
-    Object.keys(data.playerDoubles).forEach(w => { playerDoubles[w] = data.playerDoubles[w]; });
+    Object.keys(data.playerDoubles).forEach(w => { playerDoubles[Number(w)] = data.playerDoubles[w]; });
   }
   if (data.games && data.games[CURRENT_WEEK]) {
     const wg = data.games[CURRENT_WEEK];
@@ -2441,8 +2441,12 @@ function applySheetData(data) {
       });
     });
   }
-  if (data.results) Object.assign(results, data.results);
-  if (data.tbActual) Object.assign(tbActual, data.tbActual);
+  if (data.results) {
+    Object.keys(data.results).forEach(k => { results[Number(k)] = data.results[k]; });
+  }
+  if (data.tbActual) {
+    Object.keys(data.tbActual).forEach(k => { tbActual[Number(k)] = data.tbActual[k]; });
+  }
 }
 
 window.startNewSeason = function() {
@@ -2460,20 +2464,4 @@ window.startNewSeason = function() {
     Object.keys(results).forEach(k => delete results[k]);
     Object.keys(tbActual).forEach(k => delete tbActual[k]);
     Object.keys(tbGuesses).forEach(k => delete tbGuesses[k]);
-    renderSeasonSelector();
-    initApp();
-    showToast('✓ ' + nextSeason + ' season started!');
-  });
-};
-
-
-// Start: load from Google Sheets then init
-if (SCRIPT_URL !== '__SCRIPT_URL__') {
-  loadFromSheet();
-} else {
-  initApp();
-}
-
-</script>
-</body>
-</html>
+    renderSeasonSele
