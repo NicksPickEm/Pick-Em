@@ -161,7 +161,7 @@
 <div class="page active" id="page-standings">
   <div class="section-title">Season Standings</div>
   <div class="stat-row">
-    <div class="stat-card"><div class="stat-value">7</div><div class="stat-label">Weeks Complete</div></div>
+    <div class="stat-card"><div class="stat-value" id="stat-weeks">—</div><div class="stat-label">WEEKS COMPLETE</div></div>
     <div class="stat-card"><div class="stat-value">54</div><div class="stat-label">Participants</div></div>
   </div>
   <table class="standings-table">
@@ -955,8 +955,8 @@ function teamBadge(teamName, status) {
     </div>${indicator}</div>`;
 }
 
-const WEEKS = 7;
-const CURRENT_WEEK = 1;
+const WEEKS = 14;
+const CURRENT_WEEK = 14;
 let CURRENT_SEASON = new Date().getFullYear();
 let activeSeason = CURRENT_SEASON; // which season is being viewed
 let availableSeasons = [CURRENT_SEASON]; // all seasons in sheet
@@ -1088,6 +1088,12 @@ function gameLabelPlain(gi, gamesArr, neutralArr) {
 
 function renderStandings() {
   const seasonData = computeSeasonData();
+  // Update stat cards
+  const weeksEl = document.getElementById('stat-weeks');
+  const partEl = document.getElementById('stat-participants');
+  const completedWks = Array.from({length: WEEKS}, (_, i) => i+1).filter(w => results[w]).length;
+  if (weeksEl) weeksEl.textContent = completedWks;
+  if (partEl) partEl.textContent = participants.length;
   const prevSeasonData = participants.map(p => { let pts=0; for(let w=1;w<=WEEKS-1;w++){if(results[w])pts+=weekScore(w,p);} return{name:p,pts}; }).sort((a,b)=>b.pts-a.pts);
   const prevRankMap = {}; prevSeasonData.forEach((d,i)=>{prevRankMap[d.name]=i+1;});
   const maxPts = seasonData[0]?.pts || 1;
@@ -1996,6 +2002,13 @@ function saveResultsToSheet(week) {
 }
 
 function initApp() {
+  // Dynamically set WEEKS and CURRENT_WEEK based on loaded results
+  const completedWks = Object.keys(results).map(Number).filter(w => results[w]);
+  if (completedWks.length > 0) {
+    WEEKS = Math.max(...completedWks);
+    CURRENT_WEEK = WEEKS;
+  }
+  // Also update participant count from loaded data
   renderStandings();
   renderPicks(CURRENT_WEEK);
   renderDistribution(CURRENT_WEEK);
