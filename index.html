@@ -162,7 +162,7 @@
   <div class="section-title">Season Standings</div>
   <div class="stat-row">
     <div class="stat-card"><div class="stat-value" id="stat-weeks">—</div><div class="stat-label">WEEKS COMPLETE</div></div>
-    <div class="stat-card"><div class="stat-value">54</div><div class="stat-label">Participants</div></div>
+    <div class="stat-card"><div class="stat-value" id="stat-participants">—</div><div class="stat-label">PARTICIPANTS</div></div>
   </div>
   <table class="standings-table">
     <thead><tr>
@@ -955,8 +955,8 @@ function teamBadge(teamName, status) {
     </div>${indicator}</div>`;
 }
 
-const WEEKS = 14;
-const CURRENT_WEEK = 14;
+let WEEKS = 14;
+let CURRENT_WEEK = 14;
 let CURRENT_SEASON = new Date().getFullYear();
 let activeSeason = CURRENT_SEASON; // which season is being viewed
 let availableSeasons = [CURRENT_SEASON]; // all seasons in sheet
