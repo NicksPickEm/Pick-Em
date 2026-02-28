@@ -1102,67 +1102,55 @@ function weekScore(week, participant) {
     sum + (pick === results[week][gi] ? (weekDbls.includes(gi) ? 2 : 1) : 0), 0);
 }
 
-// Season standings through all weeks
-const seasonData = participants.map(p => {
-  let pts = 0, wins = 0, losses = 0;
-  let dblCorrect = 0, dblTotal = 0;
-  let weekScores = [];
-  let weekResults = []; // 'W' or 'L' per week
+// Season standings — computed fresh each render (data loads async)
+function computeSeasonData() {
+  return participants.map(p => {
+    let pts = 0, wins = 0, losses = 0;
+    let dblCorrect = 0, dblTotal = 0;
+    let weekScores = [];
+    let weekResults = [];
 
+    for (let w = 1; w <= WEEKS; w++) {
+      if (!results[w]) continue;
+      const s = weekScore(w, p);
+      pts += s;
+      weekScores.push(s);
+
+      const max = Math.max(...participants.map(pp => weekScore(w, pp)));
+      const isWin = s === max;
+      if (isWin) wins++; else losses++;
+      weekResults.push(isWin ? 'W' : 'L');
+
+      const pDbls = (playerDoubles[w] && playerDoubles[w][p]) ? playerDoubles[w][p] : [];
+      pDbls.forEach(gi => {
+        dblTotal++;
+        if (picks[w] && picks[w][p] && picks[w][p][gi] === results[w][gi]) dblCorrect++;
+      });
+    }
+
+    let streak = 0;
+    let streakType = weekResults[weekResults.length - 1] || 'W';
+    for (let i = weekResults.length - 1; i >= 0; i--) {
+      if (weekResults[i] === streakType) streak++; else break;
+    }
+
+    const last5 = weekResults.slice(-5);
+    return { name: p, pts, wins, losses, dblCorrect, dblTotal, weekScores, streak, streakType, last5 };
+  }).sort((a, b) => b.pts - a.pts);
+}
+
+function computeWeeklyWinners() {
+  const ww = {};
   for (let w = 1; w <= WEEKS; w++) {
     if (!results[w]) continue;
-    const s = weekScore(w, p);
-    pts += s;
-    weekScores.push(s);
-
-    const max = Math.max(...participants.map(pp => weekScore(w, pp)));
-    const isWin = s === max;
-    if (isWin) wins++; else losses++;
-    weekResults.push(isWin ? 'W' : 'L');
-
-    // 2PT game record
-    DOUBLE_GAMES.forEach(gi => {
-      dblTotal++;
-      if (picks[w][p][gi] === results[w][gi]) dblCorrect++;
+    let best = null, bestScore = -1;
+    participants.forEach(p => {
+      const s = weekScore(w, p);
+      if (s > bestScore) { bestScore = s; best = p; }
     });
+    ww[w] = { name: best, score: bestScore };
   }
-
-  // Streak
-  let streak = 0;
-  let streakType = weekResults[weekResults.length - 1];
-  for (let i = weekResults.length - 1; i >= 0; i--) {
-    if (weekResults[i] === streakType) streak++;
-    else break;
-  }
-
-  // Last 5
-  const last5 = weekResults.slice(-5);
-
-  return { name: p, pts, wins, losses, dblCorrect, dblTotal, weekScores, streak, streakType, last5 };
-}).sort((a, b) => b.pts - a.pts);
-
-// Standings through WEEKS-1 (last week) to compute rank movement
-const prevSeasonData = participants.map(p => {
-  let pts = 0;
-  for (let w = 1; w <= WEEKS - 1; w++) {
-    if (!results[w]) continue;
-    pts += weekScore(w, p);
-  }
-  return { name: p, pts };
-}).sort((a, b) => b.pts - a.pts);
-
-const prevRankMap = {};
-prevSeasonData.forEach((d, i) => { prevRankMap[d.name] = i + 1; });
-
-const weeklyWinners = {};
-for (let w = 1; w <= WEEKS; w++) {
-  if (!results[w]) continue;
-  let best = null, bestScore = -1;
-  participants.forEach(p => {
-    const s = weekScore(w, p);
-    if (s > bestScore) { bestScore = s; best = p; }
-  });
-  weeklyWinners[w] = { name: best, score: bestScore };
+  return ww;
 }
 
 
@@ -1183,6 +1171,15 @@ function gameLabelPlain(gi, gamesArr, neutralArr) {
 }
 
 function renderStandings() {
+  const seasonData = computeSeasonData();
+  const prevSeasonData = participants.map(p => {
+    let pts = 0;
+    for (let w = 1; w <= WEEKS - 1; w++) { if (results[w]) pts += weekScore(w, p); }
+    return { name: p, pts };
+  }).sort((a, b) => b.pts - a.pts);
+  const prevRankMap = {};
+  prevSeasonData.forEach((d, i) => { prevRankMap[d.name] = i + 1; });
+
   const maxPts = seasonData[0]?.pts || 1;
   const leader = seasonData[0]?.pts || 0;
 
@@ -1529,6 +1526,7 @@ function renderCharts() {
 
   // --- Points Per Week Chart (pure CSS bars) ---
   const ppwSelect = document.getElementById('ppw-select');
+  const seasonData = computeSeasonData();
   seasonData.forEach((d, i) => {
     const opt = document.createElement('option');
     opt.value = d.name;
@@ -1559,6 +1557,7 @@ function renderCharts() {
 
   // --- Weekly Winners Table ---
 
+  const weeklyWinners = computeWeeklyWinners();
   document.getElementById('winners-table').innerHTML =
     '<thead><tr><th>Week</th><th>Winner</th><th style="text-align:right">Score</th></tr></thead><tbody>' +
     Object.entries(weeklyWinners).map(function(e) {
@@ -1614,8 +1613,9 @@ function renderCharts() {
 
   // Build checklist
   var checklist = document.getElementById('bump-checklist');
+  var bumpSeasonData = computeSeasonData();
   checklist.innerHTML = participants.map(function(p) {
-    var rank = seasonData.findIndex(function(d) { return d.name === p; }) + 1;
+    var rank = bumpSeasonData.findIndex(function(d) { return d.name === p; }) + 1;
     var esc = p.replace(/'/g, "\'");
     return '<label class="bump-check-item"><input type="checkbox" onchange="updateCustomSelection(\'' + esc + '\',this.checked)"> <span>#' + rank + ' ' + p + '</span></label>';
   }).join('');
@@ -1767,6 +1767,7 @@ function openPlayer(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
 
+  const seasonData = computeSeasonData();
   const rank = seasonData.findIndex(d => d.name === name) + 1;
   const seasonEntry = seasonData.find(d => d.name === name);
 
