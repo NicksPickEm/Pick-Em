@@ -479,37 +479,40 @@ function renderAdminTab(tab) {
 }
 
 function renderAdminGames() {
-  const teamNames = Object.keys(FBS_TEAMS).sort();
-  const makeSelect = (id, current, gi, slot) => {
-    const opts = '<option value="">-- Select Team --</option>' +
-      teamNames.map(n => '<option value="' + n + '"' + (n === current ? ' selected' : '') + '>' + n + '</option>').join('');
-    return '<select id="' + id + '" onchange="onTeamChange(' + gi + ',' + slot + ')" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px 6px;font-size:12px;font-family:Inter,sans-serif;min-width:0">' + opts + '</select>';
+  const sortedAbbrs = Object.entries(FBS_TEAMS).map(([name,t]) => t.abbr).sort();
+
+  const makeSelect = (id, currentAbbr, gi, slot) => {
+    const opts = '<option value="">-- Team --</option>' +
+      sortedAbbrs.map(abbr => '<option value="' + abbr + '"' + (abbr === currentAbbr ? ' selected' : '') + '>' + abbr + '</option>').join('');
+    return '<select id="' + id + '" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px 6px;font-size:12px;font-family:Inter,sans-serif;min-width:0">' + opts + '</select>';
   };
+
+  if (!sheetNeutralGames[adminWeek]) sheetNeutralGames[adminWeek] = [];
 
   let html = '';
   for (let gi = 0; gi < 13; gi++) {
-    const weekGameData = sheetGames[adminWeek] || [];
-    const g = weekGameData[gi] || ['', ''];
-    const weekFavs = sheetFavorites[adminWeek] || favorites;
+    const g = (sheetGames[adminWeek] || [])[gi] || ['', ''];
+    const weekFavs = sheetFavorites[adminWeek] || Array(13).fill(1);
     const weekDbls = sheetDoubleGames[adminWeek] || [];
     const isFav0 = (weekFavs[gi] || 0) === 0;
     const isDbl = weekDbls.includes(gi);
-    const weekNeutrals = sheetNeutralGames[adminWeek] || [];
-    const isNeutral = weekNeutrals.includes(gi);
+    const isNeutral = (sheetNeutralGames[adminWeek] || []).includes(gi);
     html += '<div style="margin-bottom:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px">' +
       '<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">' +
         '<span style="font-family:Bebas Neue,sans-serif;font-size:18px;color:var(--muted);width:20px;flex-shrink:0">' + (gi + 1) + '</span>' +
         makeSelect('ag-t0-' + gi, g[0], gi, 0) +
-        '<span style="color:var(--muted);font-size:11px;font-weight:700;flex-shrink:0">vs</span>' +
+        '<span style="color:var(--muted);font-size:11px;font-weight:700;flex-shrink:0">@</span>' +
         makeSelect('ag-t1-' + gi, g[1], gi, 1) +
       '</div>' +
-      '<div style="display:flex;gap:12px;padding-left:26px">' +
+      '<div style="display:flex;gap:12px;padding-left:26px;flex-wrap:wrap">' +
         '<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--gold);cursor:pointer">' +
-          '<input type="checkbox" id="ag-fav-' + gi + '"' + (isFav0 ? ' checked' : '') + ' style="accent-color:var(--gold)"> Left team is favorite' +
+          '<input type="checkbox" id="ag-fav-' + gi + '"' + (isFav0 ? ' checked' : '') + ' style="accent-color:var(--gold)"> Left is favorite' +
         '</label>' +
         '<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--accent);cursor:pointer">' +
           '<input type="checkbox" id="ag-dbl-' + gi + '"' + (isDbl ? ' checked' : '') + ' onchange="onDblChange(' + gi + ')" style="accent-color:var(--accent)"> 2PT game' +
-      '<span style="margin-left:12px"><input type="checkbox" id="ag-ntl-' + gi + '"' + (isNeutral ? ' checked' : '') + ' style="accent-color:var(--muted)"> Neutral site</span>' +
+        '</label>' +
+        '<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer">' +
+          '<input type="checkbox" id="ag-ntl-' + gi + '"' + (isNeutral ? ' checked' : '') + ' style="accent-color:var(--muted)"> Neutral site' +
         '</label>' +
       '</div>' +
     '</div>';
@@ -567,28 +570,24 @@ function saveGamesSetup() {
   const dblCount = document.querySelectorAll('[id^="ag-dbl-"]:checked').length;
   if (dblCount > 3) { showAdminMsg('⚠️ Max 3 two-point games allowed.'); return; }
 
-  // Commit
+  // Commit to sheetGames (per-week storage)
+  if (!sheetGames[adminWeek]) sheetGames[adminWeek] = [];
+  if (!sheetFavorites[adminWeek]) sheetFavorites[adminWeek] = Array(13).fill(1);
+  if (!sheetDoubleGames[adminWeek]) sheetDoubleGames[adminWeek] = [];
+  if (!sheetNeutralGames[adminWeek]) sheetNeutralGames[adminWeek] = [];
   for (let gi = 0; gi < 13; gi++) {
-    games[gi] = [document.getElementById('ag-t0-' + gi).value, document.getElementById('ag-t1-' + gi).value];
-    favorites[gi] = document.getElementById('ag-fav-' + gi).checked ? 0 : 1;
-    const dblIdx = DOUBLE_GAMES.indexOf(gi);
-    if (document.getElementById('ag-dbl-' + gi).checked) {
-      if (dblIdx === -1) DOUBLE_GAMES.push(gi);
-    } else {
-      if (dblIdx > -1) DOUBLE_GAMES.splice(dblIdx, 1);
-    }
+    sheetGames[adminWeek][gi] = [document.getElementById('ag-t0-' + gi).value, document.getElementById('ag-t1-' + gi).value];
+    sheetFavorites[adminWeek][gi] = document.getElementById('ag-fav-' + gi).checked ? 0 : 1;
+    const dblEl = document.getElementById('ag-dbl-' + gi);
+    const dblIdx = sheetDoubleGames[adminWeek].indexOf(gi);
+    if (dblEl && dblEl.checked) { if (dblIdx === -1) sheetDoubleGames[adminWeek].push(gi); }
+    else { if (dblIdx > -1) sheetDoubleGames[adminWeek].splice(dblIdx, 1); }
     const ntlEl = document.getElementById('ag-ntl-' + gi);
-    const ntlIdx = NEUTRAL_GAMES.indexOf(gi);
-    if (ntlEl && ntlEl.checked) {
-      if (ntlIdx === -1) NEUTRAL_GAMES.push(gi);
-    } else {
-      if (ntlIdx > -1) NEUTRAL_GAMES.splice(ntlIdx, 1);
-    }
+    const ntlIdx = sheetNeutralGames[adminWeek].indexOf(gi);
+    if (ntlEl && ntlEl.checked) { if (ntlIdx === -1) sheetNeutralGames[adminWeek].push(gi); }
+    else { if (ntlIdx > -1) sheetNeutralGames[adminWeek].splice(ntlIdx, 1); }
   }
-  picks[adminWeek] = {};
-  participants.forEach(p => { picks[adminWeek][p] = Array(13).fill(null); });
-  results[adminWeek] = null;
-  showAdminMsg('✓ Games saved for Week ' + adminWeek + '! Picks reset.');
+  showAdminMsg('✓ Games saved for Week ' + adminWeek + '!');
   saveGamesToSheet(adminWeek);
 }
 
@@ -1962,14 +1961,14 @@ function showToast(msg) {
 }
 
 function saveGamesToSheet(week) {
-  const dbl = [];
-  DOUBLE_GAMES.forEach(gi => dbl.push(gi));
-  const ntl = [];
-  NEUTRAL_GAMES.forEach(gi => ntl.push(gi));
+  const wGames = sheetGames[week] || games;
+  const wFavs = sheetFavorites[week] || favorites;
+  const wDbl = sheetDoubleGames[week] || [];
+  const wNtl = sheetNeutralGames[week] || [];
   apiCall({
     action: 'saveGames',
     season: CURRENT_SEASON,
-    data: { week, games, favorites, doubleGames: dbl, neutralGames: ntl }
+    data: { week, games: wGames, favorites: wFavs, doubleGames: wDbl, neutralGames: wNtl }
   }, d => showToast(d ? '✓ Games saved to sheet' : '⚠️ Sheet save failed'));
 }
 
