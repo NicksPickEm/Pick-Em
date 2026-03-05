@@ -443,7 +443,7 @@ function checkAdminPw() {
 function renderAdminWeekPills() {
   const container = document.getElementById('admin-week-pills');
   container.innerHTML = Array.from({length: 14}, (_, i) => i + 1).map(w => {
-    const done = !!results[w];
+    const done = hasResults(w);
     return '<button class="week-pill' + (w === adminWeek ? ' active' : '') + '" onclick="setAdminWeek(' + w + ')">' +
       'Wk ' + w + (done ? ' ✓' : '') + '</button>';
   }).join('');
@@ -957,7 +957,7 @@ function teamBadge(teamName, status) {
 
 const WEEKS = 7;
 const CURRENT_WEEK = 1;
-let CURRENT_SEASON = new Date().getFullYear();
+let CURRENT_SEASON = 2025;
 let activeSeason = CURRENT_SEASON; // which season is being viewed
 let availableSeasons = [CURRENT_SEASON]; // all seasons in sheet
 let adminGamesLoaded = false;
@@ -987,6 +987,11 @@ const favorites = [0,0,0,0,0,1,0,0,0,0,1,0,1];
 
 const results = {};
 
+function hasResults(w) {
+  return !!(results[w] && results[w].some(r => r !== null && r !== undefined));
+}
+
+
 function rando(seed) {
   let x = Math.sin(seed) * 10000;
   return Math.floor((x - Math.floor(x)) * 2);
@@ -1012,7 +1017,7 @@ function tbDiff(week, participant) {
 }
 
 function weekWinner(week) {
-  if (!results[week]) return null;
+  if (!hasResults(week)) return null;
   const maxScore = Math.max(...participants.map(p => weekScore(week, p)));
   const tied = participants.filter(p => weekScore(week, p) === maxScore);
   if (tied.length === 1) return { winner: tied[0], tiebreak: false };
@@ -1023,7 +1028,7 @@ function weekWinner(week) {
 }
 
 function weekScore(week, participant) {
-  if (!results[week]) return 0;
+  if (!hasResults(week)) return 0;
   if (!picks[week] || !picks[week][participant]) return 0;
   const weekDbls = (playerDoubles[week] && playerDoubles[week][participant])
     ? playerDoubles[week][participant]
@@ -1037,7 +1042,7 @@ function computeSeasonData() {
     let pts = 0, wins = 0, losses = 0, dblCorrect = 0, dblTotal = 0;
     let weekScores = [], weekResults = [];
     for (let w = 1; w <= WEEKS; w++) {
-      if (!results[w]) continue;
+      if (!hasResults(w)) continue;
       const s = weekScore(w, p);
       pts += s; weekScores.push(s);
       const max = Math.max(...participants.map(pp => weekScore(w, pp)));
@@ -1058,7 +1063,7 @@ function computeSeasonData() {
 function computeWeeklyWinners() {
   const ww = {};
   for (let w = 1; w <= WEEKS; w++) {
-    if (!results[w]) continue;
+    if (!hasResults(w)) continue;
     let best = null, bestScore = -1;
     participants.forEach(p => { const s = weekScore(w, p); if (s > bestScore) { bestScore = s; best = p; } });
     ww[w] = { name: best, score: bestScore };
@@ -1085,13 +1090,13 @@ function gameLabelPlain(gi, gamesArr, neutralArr) {
 
 function renderStandings() {
   const seasonData = computeSeasonData();
-  const prevSeasonData = participants.map(p => { let pts=0; for(let w=1;w<=WEEKS-1;w++){if(results[w])pts+=weekScore(w,p);} return{name:p,pts}; }).sort((a,b)=>b.pts-a.pts);
+  const prevSeasonData = participants.map(p => { let pts=0; for(let w=1;w<=WEEKS-1;w++){if(hasResults(w))pts+=weekScore(w,p);} return{name:p,pts}; }).sort((a,b)=>b.pts-a.pts);
   const prevRankMap = {}; prevSeasonData.forEach((d,i)=>{ prevRankMap[d.name]=i+1; });
   const maxPts = seasonData[0]?.pts || 1;
   const leader = seasonData[0]?.pts || 0;
 
   // Max possible points remaining in season
-  const weeksLeft = Array.from({length: 14}, (_, i) => i + 1).filter(w => !results[w]).length;
+  const weeksLeft = Array.from({length: 14}, (_, i) => i + 1).filter(w => !hasResults(w)).length;
   const maxPerWeek = 16; // 3x2pt + 10x1pt
   const maxRemaining = weeksLeft * maxPerWeek;
 
@@ -1121,7 +1126,7 @@ function renderStandings() {
     // Mini sparkline — rank position per week (higher on chart = better rank)
     const rankByWeek = [];
     for (let w = 1; w <= WEEKS; w++) {
-      if (!results[w]) continue;
+      if (!hasResults(w)) continue;
       const weekPts = participants.map(p => ({ name: p, s: weekScore(w, p) }));
       // cumulative pts up to this week
       const cumPts = participants.map(p => ({
@@ -1171,7 +1176,7 @@ function renderStandings() {
 function buildWeekPills(containerId, activeWeek, callback) {
   document.getElementById(containerId).innerHTML =
     Array.from({length: WEEKS}, (_, i) => i + 1).map(w =>
-      `<div class="week-pill ${w === activeWeek ? 'active' : ''}" onclick="${callback}(${w})">${results[w] ? '✓ ' : ''}Wk ${w}</div>`
+      `<div class="week-pill ${w === activeWeek ? 'active' : ''}" onclick="${callback}(${w})">${hasResults(w) ? '✓ ' : ''}Wk ${w}</div>`
     ).join('');
 }
 
@@ -1403,7 +1408,7 @@ function renderCharts() {
   chartsRendered = true;
 
   // --- Consensus Accuracy Chart (pure CSS bars) ---
-  const completedWeeksAll = Array.from({length: WEEKS}, (_, i) => i + 1).filter(w => results[w]);
+  const completedWeeksAll = Array.from({length: WEEKS}, (_, i) => i + 1).filter(w => hasResults(w));
   const consensusAccuracy = completedWeeksAll.map(w => {
     let correct = 0, total = 0;
     games.forEach((g, gi) => {
@@ -1563,7 +1568,7 @@ function renderBumpChart(filter) {
     '#ff6b6b','#4ecdc4','#45b7d1','#96ceb4','#ffad60'];
 
   var completedWeeks = [];
-  for (var w = 1; w <= WEEKS; w++) { if (results[w]) completedWeeks.push(w); }
+  for (var w = 1; w <= WEEKS; w++) { if (hasResults(w)) completedWeeks.push(w); }
   var W = completedWeeks.length;
   if (W === 0) { container.innerHTML = '<div style="color:var(--muted);padding:20px;text-align:center">No completed weeks yet</div>'; return; }
 
@@ -1681,7 +1686,7 @@ function openPlayer(name) {
   // Compute weekly scores
   const weekScores = [];
   for (let w = 1; w <= WEEKS; w++) {
-    if (!results[w]) continue;
+    if (!hasResults(w)) continue;
     const s = weekScore(w, name);
     const correct = picks[w][name].filter((pick, gi) => pick === results[w][gi]).length;
     const weekMax = Math.max(...participants.map(p => weekScore(w, p)));
