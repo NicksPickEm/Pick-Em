@@ -955,8 +955,8 @@ function teamBadge(teamName, status) {
     </div>${indicator}</div>`;
 }
 
-let WEEKS = 14;
-let CURRENT_WEEK = 14;
+const WEEKS = 7;
+const CURRENT_WEEK = 1;
 let CURRENT_SEASON = new Date().getFullYear();
 let activeSeason = CURRENT_SEASON; // which season is being viewed
 let availableSeasons = [CURRENT_SEASON]; // all seasons in sheet
@@ -1032,13 +1032,10 @@ function weekScore(week, participant) {
     sum + (pick === results[week][gi] ? (weekDbls.includes(gi) ? 2 : 1) : 0), 0);
 }
 
-// Season standings — computed fresh each render (data loads async)
 function computeSeasonData() {
   return participants.map(p => {
-    let pts = 0, wins = 0, losses = 0;
-    let dblCorrect = 0, dblTotal = 0;
-    let weekScores = [];
-    let weekResults = [];
+    let pts = 0, wins = 0, losses = 0, dblCorrect = 0, dblTotal = 0;
+    let weekScores = [], weekResults = [];
     for (let w = 1; w <= WEEKS; w++) {
       if (!results[w]) continue;
       const s = weekScore(w, p);
@@ -1088,14 +1085,8 @@ function gameLabelPlain(gi, gamesArr, neutralArr) {
 
 function renderStandings() {
   const seasonData = computeSeasonData();
-  // Update stat cards
-  const weeksEl = document.getElementById('stat-weeks');
-  const partEl = document.getElementById('stat-participants');
-  const completedWks = Array.from({length: WEEKS}, (_, i) => i+1).filter(w => results[w]).length;
-  if (weeksEl) weeksEl.textContent = completedWks;
-  if (partEl) partEl.textContent = participants.length;
   const prevSeasonData = participants.map(p => { let pts=0; for(let w=1;w<=WEEKS-1;w++){if(results[w])pts+=weekScore(w,p);} return{name:p,pts}; }).sort((a,b)=>b.pts-a.pts);
-  const prevRankMap = {}; prevSeasonData.forEach((d,i)=>{prevRankMap[d.name]=i+1;});
+  const prevRankMap = {}; prevSeasonData.forEach((d,i)=>{ prevRankMap[d.name]=i+1; });
   const maxPts = seasonData[0]?.pts || 1;
   const leader = seasonData[0]?.pts || 0;
 
@@ -1207,7 +1198,6 @@ function sortPicksByCol(week, col) {
 function renderPicksTable(week) {
   buildWeekPills('week-selector', week, 'renderPicks');
   const res = results[week];
-  const weekGames = sheetGames[week] || games;
   const weekNeutralGames = sheetNeutralGames[week] || NEUTRAL_GAMES;
 
   // Compute winner info up front so sort can use it
@@ -1242,14 +1232,13 @@ function renderPicksTable(week) {
     });
   } else {
     sorted = [...participants].sort((a, b) => {
-      const wg2 = sheetGames[week] || games;
-      const nameA = wg2[picksSort.col]?.[(picks[week]?.[a]?.[picksSort.col] ?? 0)] || '';
-      const nameB = wg2[picksSort.col]?.[(picks[week]?.[b]?.[picksSort.col] ?? 0)] || '';
+      const nameA = games[picksSort.col][picks[week][a][picksSort.col]];
+      const nameB = games[picksSort.col][picks[week][b][picksSort.col]];
       return picksSort.dir * nameA.localeCompare(nameB);
     });
   }
 
-  const headers = weekGames.map((g, gi) => {
+  const headers = games.map((g, gi) => {
     const isDbl = DOUBLE_GAMES.includes(gi);
     const isActive = picksSort.col === gi;
     const arrow = isActive ? (picksSort.dir === 1 ? ' ▲' : ' ▼') : '';
@@ -1273,10 +1262,8 @@ function renderPicksTable(week) {
     const isWinner = res && winnerInfo && p === winnerInfo.winner;
     const isMaxScore = res && weekScore(week, p) === maxScore;
 
-    const playerPicks = picks[week]?.[p] || [];
-    const cells = weekGames.map((g, gi) => {
-      const pick = playerPicks[gi];
-      if (pick === null || pick === undefined) return `<td><span style="color:var(--muted);font-size:11px">—</span></td>`;
+    const cells = games.map((g, gi) => {
+      const pick = picks[week][p][gi];
       const teamName = g[pick];
       if (!res) return `<td>${teamBadge(teamName, '')}</td>`;
       const status = pick === res[gi] ? 'correct' : 'wrong';
@@ -1300,8 +1287,8 @@ function renderPicksTable(week) {
   }).join('');
 
   // Consensus row - most popular pick for each game
-  const consensusCells = weekGames.map((g, gi) => {
-    const favCount = participants.filter(p => (picks[week]?.[p]?.[gi] ?? -1) === 0).length;
+  const consensusCells = games.map((g, gi) => {
+    const favCount = participants.filter(p => picks[week][p][gi] === 0).length;
     const dogCount = participants.length - favCount;
     const majorityPick = favCount >= dogCount ? 0 : 1;
     const majorityPct = Math.round((Math.max(favCount, dogCount) / participants.length) * 100);
@@ -1355,17 +1342,15 @@ function renderDistribution(week) {
   buildWeekPills('dist-week-selector', week, 'renderDistribution');
   const res = results[week];
   const total = participants.length;
-  const weekGames = sheetGames[week] || games;
-  const weekFavorites = sheetFavorites[week] || favorites;
 
-  document.getElementById('dist-content').innerHTML = weekGames.map((g, gi) => {
+  document.getElementById('dist-content').innerHTML = games.map((g, gi) => {
     const isDbl = DOUBLE_GAMES.includes(gi);
-    const favIdx = weekFavorites[gi] ?? 1;  // 0 or 1 — which team is the favorite
+    const favIdx = favorites[gi];       // 0 or 1 — which team is the favorite
     const dogIdx = 1 - favIdx;          // the other team
     const favTeam = g[favIdx];
     const dogTeam = g[dogIdx];
 
-    const favCount = participants.filter(p => (picks[week]?.[p]?.[gi] ?? -1) === favIdx).length;
+    const favCount = participants.filter(p => picks[week][p][gi] === favIdx).length;
     const dogCount = total - favCount;
     const favPct = Math.round((favCount / total) * 100);
     const dogPct = 100 - favPct;
@@ -1447,8 +1432,8 @@ function renderCharts() {
   renderConsensusChart();
 
   // --- Points Per Week Chart (pure CSS bars) ---
-  const seasonData = computeSeasonData();
   const ppwSelect = document.getElementById('ppw-select');
+  const seasonData = computeSeasonData();
   seasonData.forEach((d, i) => {
     const opt = document.createElement('option');
     opt.value = d.name;
@@ -1535,9 +1520,9 @@ function renderCharts() {
 
   // Build checklist
   var checklist = document.getElementById('bump-checklist');
-  var bumpSeasonData = computeSeasonData();
+  var _sd = computeSeasonData();
   checklist.innerHTML = participants.map(function(p) {
-    var rank = bumpSeasonData.findIndex(function(d) { return d.name === p; }) + 1;
+    var rank = _sd.findIndex(function(d) { return d.name === p; }) + 1;
     var esc = p.replace(/'/g, "\'");
     return '<label class="bump-check-item"><input type="checkbox" onchange="updateCustomSelection(\'' + esc + '\',this.checked)"> <span>#' + rank + ' ' + p + '</span></label>';
   }).join('');
@@ -1669,15 +1654,11 @@ function showPage(id, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('page-player').classList.remove('active');
-  const pg = document.getElementById('page-' + id); if (pg) pg.classList.add('active'); else return;
+  document.getElementById('page-' + id).classList.add('active');
   btn.classList.add('active');
   lastPage = id;
   lastBtn = btn;
   if (id === 'charts') renderCharts();
-  else if (id === 'picks') renderPicks(CURRENT_WEEK);
-  else if (id === 'distribution') renderDistribution(CURRENT_WEEK);
-  else if (id === 'standings') renderStandings();
-  else if (id === 'records') showRecords();
 }
 
 function goBack() {
@@ -2008,13 +1989,6 @@ function saveResultsToSheet(week) {
 }
 
 function initApp() {
-  // Dynamically set WEEKS and CURRENT_WEEK based on loaded results
-  const completedWks = Object.keys(results).map(Number).filter(w => results[w]);
-  if (completedWks.length > 0) {
-    WEEKS = Math.max(...completedWks);
-    CURRENT_WEEK = WEEKS;
-  }
-  // Also update participant count from loaded data
   renderStandings();
   renderPicks(CURRENT_WEEK);
   renderDistribution(CURRENT_WEEK);
