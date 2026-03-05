@@ -1242,8 +1242,9 @@ function renderPicksTable(week) {
     });
   } else {
     sorted = [...participants].sort((a, b) => {
-      const nameA = games[picksSort.col][picks[week][a][picksSort.col]];
-      const nameB = games[picksSort.col][picks[week][b][picksSort.col]];
+      const wg2 = sheetGames[week] || games;
+      const nameA = wg2[picksSort.col]?.[(picks[week]?.[a]?.[picksSort.col] ?? 0)] || '';
+      const nameB = wg2[picksSort.col]?.[(picks[week]?.[b]?.[picksSort.col] ?? 0)] || '';
       return picksSort.dir * nameA.localeCompare(nameB);
     });
   }
@@ -1272,8 +1273,10 @@ function renderPicksTable(week) {
     const isWinner = res && winnerInfo && p === winnerInfo.winner;
     const isMaxScore = res && weekScore(week, p) === maxScore;
 
+    const playerPicks = picks[week]?.[p] || [];
     const cells = weekGames.map((g, gi) => {
-      const pick = picks[week][p][gi];
+      const pick = playerPicks[gi];
+      if (pick === null || pick === undefined) return `<td><span style="color:var(--muted);font-size:11px">—</span></td>`;
       const teamName = g[pick];
       if (!res) return `<td>${teamBadge(teamName, '')}</td>`;
       const status = pick === res[gi] ? 'correct' : 'wrong';
@@ -1297,8 +1300,8 @@ function renderPicksTable(week) {
   }).join('');
 
   // Consensus row - most popular pick for each game
-  const consensusCells = games.map((g, gi) => {
-    const favCount = participants.filter(p => picks[week][p][gi] === 0).length;
+  const consensusCells = weekGames.map((g, gi) => {
+    const favCount = participants.filter(p => (picks[week]?.[p]?.[gi] ?? -1) === 0).length;
     const dogCount = participants.length - favCount;
     const majorityPick = favCount >= dogCount ? 0 : 1;
     const majorityPct = Math.round((Math.max(favCount, dogCount) / participants.length) * 100);
@@ -1362,7 +1365,7 @@ function renderDistribution(week) {
     const favTeam = g[favIdx];
     const dogTeam = g[dogIdx];
 
-    const favCount = participants.filter(p => picks[week][p][gi] === favIdx).length;
+    const favCount = participants.filter(p => (picks[week]?.[p]?.[gi] ?? -1) === favIdx).length;
     const dogCount = total - favCount;
     const favPct = Math.round((favCount / total) * 100);
     const dogPct = 100 - favPct;
