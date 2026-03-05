@@ -1207,6 +1207,7 @@ function sortPicksByCol(week, col) {
 function renderPicksTable(week) {
   buildWeekPills('week-selector', week, 'renderPicks');
   const res = results[week];
+  const weekGames = sheetGames[week] || games;
   const weekNeutralGames = sheetNeutralGames[week] || NEUTRAL_GAMES;
 
   // Compute winner info up front so sort can use it
@@ -1247,7 +1248,7 @@ function renderPicksTable(week) {
     });
   }
 
-  const headers = games.map((g, gi) => {
+  const headers = weekGames.map((g, gi) => {
     const isDbl = DOUBLE_GAMES.includes(gi);
     const isActive = picksSort.col === gi;
     const arrow = isActive ? (picksSort.dir === 1 ? ' ▲' : ' ▼') : '';
@@ -1271,7 +1272,7 @@ function renderPicksTable(week) {
     const isWinner = res && winnerInfo && p === winnerInfo.winner;
     const isMaxScore = res && weekScore(week, p) === maxScore;
 
-    const cells = games.map((g, gi) => {
+    const cells = weekGames.map((g, gi) => {
       const pick = picks[week][p][gi];
       const teamName = g[pick];
       if (!res) return `<td>${teamBadge(teamName, '')}</td>`;
@@ -1351,10 +1352,12 @@ function renderDistribution(week) {
   buildWeekPills('dist-week-selector', week, 'renderDistribution');
   const res = results[week];
   const total = participants.length;
+  const weekGames = sheetGames[week] || games;
+  const weekFavorites = sheetFavorites[week] || favorites;
 
-  document.getElementById('dist-content').innerHTML = games.map((g, gi) => {
+  document.getElementById('dist-content').innerHTML = weekGames.map((g, gi) => {
     const isDbl = DOUBLE_GAMES.includes(gi);
-    const favIdx = favorites[gi];       // 0 or 1 — which team is the favorite
+    const favIdx = weekFavorites[gi] ?? 1;  // 0 or 1 — which team is the favorite
     const dogIdx = 1 - favIdx;          // the other team
     const favTeam = g[favIdx];
     const dogTeam = g[dogIdx];
