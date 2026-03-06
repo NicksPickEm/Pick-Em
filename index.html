@@ -1070,8 +1070,15 @@ function computeSeasonData() {
       pts += s; weekScores.push(s);
       const max = Math.max(...participants.map(pp => weekScore(w, pp)));
       const isWin = s === max;
-      if (isWin) wins++; else losses++;
       weekResults.push(isWin ? 'W' : 'L');
+      // W/L = correct/incorrect picks
+      if (picks[w] && picks[w][p] && results[w]) {
+        for (let gi = 0; gi < 13; gi++) {
+          const pick = picks[w][p][gi];
+          if (pick === null || pick === undefined) continue;
+          if (pick === results[w][gi]) wins++; else losses++;
+        }
+      }
       const pDbls = (playerDoubles[w] && playerDoubles[w][p]) ? playerDoubles[w][p] : [];
       pDbls.forEach(gi => {
         dblTotal++;
