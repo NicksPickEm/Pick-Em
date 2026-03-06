@@ -2131,24 +2131,21 @@ function showRecords() {
   const loading = document.getElementById('records-loading');
   const content = document.getElementById('records-content');
   if (!loading || !content) return;
-  loading.style.display = 'block';
-  content.style.display = 'none';
-  apiCall({ action: 'readSeasons' }, function(seasonsData) {
-    const seasons = (seasonsData && seasonsData.seasons) || [CURRENT_SEASON];
-    let pending = seasons.length;
-    const allData = {};
-    seasons.forEach(season => {
-      apiCall({ action: 'read', season }, function(data) {
-        allData[season] = data;
-        pending--;
-        if (pending === 0) {
-          renderRecords(allData);
-          loading.style.display = 'none';
-          content.style.display = 'block';
-        }
-      });
-    });
-  });
+  loading.style.display = 'none';
+  content.style.display = 'block';
+  // Use already-loaded in-memory data instead of re-fetching
+  const allData = {};
+  allData[activeSeason] = {
+    participants,
+    picks,
+    results,
+    doubleGames: sheetDoubleGames,
+    playerDoubles,
+    favorites: sheetFavorites,
+    games: sheetGames,
+    tbActual
+  };
+  renderRecords(allData);
 }
 
 function isPerfectWeek(playerPicks, weekResults) {
