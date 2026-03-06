@@ -2469,7 +2469,7 @@ function applySheetData(data) {
         const tb = arr[13];
         if (tb !== null && tb !== undefined) {
           if (!tbGuesses[w]) tbGuesses[w] = {};
-          tbGuesses[Number(w)][p] = tb;
+          const wn = Number(w); if (!tbGuesses[wn]) tbGuesses[wn] = {}; tbGuesses[wn][p] = tb;
         }
       });
     });
