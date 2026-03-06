@@ -383,6 +383,7 @@
   </div>
   <div id="admin-tab-results" style="display:none">
     <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Select the winner of each game and enter the tiebreaker score.</div>
+    <div id="admin-results-debug" style="font-size:10px;color:var(--muted);margin-bottom:8px"></div>
     <div id="admin-results-list"></div>
     <div id="admin-tb-wrap"></div>
     <button onclick="saveResultsData()" class="admin-save-btn">Save Results</button>
@@ -499,7 +500,7 @@ function renderAdminGames() {
 
   let html = '';
   for (let gi = 0; gi < 13; gi++) {
-    const g = (sheetGames[adminWeek] || [])[gi] || ['', ''];
+    const g = ((sheetGames[adminWeek] || sheetGames[String(adminWeek)]) || [])[gi] || ['', ''];
     const weekFavs = sheetFavorites[adminWeek] || Array(13).fill(1);
     const weekDbls = sheetDoubleGames[adminWeek] || [];
     const isFav0 = (weekFavs[gi] || 0) === 0;
@@ -600,7 +601,7 @@ function saveGamesSetup() {
 }
 
 function renderAdminPicks() {
-  const weekGames = sheetGames[adminWeek] || games;
+  const weekGames = sheetGames[adminWeek] || sheetGames[String(adminWeek)] || games;
   let thead = '<thead><tr><th class="name-col" style="position:sticky;left:0;z-index:3;background:var(--surface2)">Participant</th>';
   weekGames.forEach(function(g, gi) {
     var isDbl = DOUBLE_GAMES.includes(gi);
@@ -690,7 +691,10 @@ function savePicksData() {
 }
 
 function renderAdminResults() {
-  const weekGames = sheetGames[adminWeek] || games;
+  const weekGames = sheetGames[adminWeek] || sheetGames[String(adminWeek)] || games;
+  // Debug: show which week is loading
+  const dbgEl = document.getElementById('admin-results-debug');
+  if (dbgEl) dbgEl.textContent = 'Week ' + adminWeek + ' | sheetGames keys: ' + Object.keys(sheetGames).join(',') + ' | games: ' + (weekGames[0]||['?','?']).join(' @ ');
   const weekDbls = sheetDoubleGames[adminWeek] || [];
   const curResults = results[adminWeek] || [];
   let html = '';
