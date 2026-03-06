@@ -1758,7 +1758,8 @@ function openPlayer(name) {
   for (let w = 1; w <= WEEKS; w++) {
     if (!picks[w]?.[name]) continue;
     games.forEach((g, gi) => {
-      const t = g[picks[w][name][gi]];
+      const wgFav = sheetGames[w] || sheetGames[String(w)] || games;
+      const t = wgFav[gi] ? wgFav[gi][picks[w][name][gi]] : null;
       teamPickCounts[t] = (teamPickCounts[t] || 0) + 1;
     });
   }
@@ -1825,11 +1826,14 @@ function openPlayer(name) {
   const historyRows = weekScores.map(ws => {
     const weekPicks = picks[ws.week][name];
     const res = results[ws.week];
-    const gameCells = games.map((g, gi) => {
+    const wg = sheetGames[ws.week] || sheetGames[String(ws.week)] || games;
+    const pDbls = (playerDoubles[ws.week] && playerDoubles[ws.week][name]) ? playerDoubles[ws.week][name] : [];
+    const gameCells = wg.map((g, gi) => {
       const pick = weekPicks[gi];
+      if (pick === null || pick === undefined) return `<td style="opacity:0.3">—</td>`;
       const teamName = g[pick];
       const correct = pick === res[gi];
-      const isDbl = DOUBLE_GAMES.includes(gi);
+      const isDbl = pDbls.includes(gi);
       return `<td>${teamBadge(teamName, correct ? 'correct' : 'wrong')}${isDbl ? '<span class="dbl" style="display:block;font-size:8px;color:var(--gold);text-align:center">2x</span>' : ''}</td>`;
     }).join('');
     return `<tr>
@@ -1839,12 +1843,8 @@ function openPlayer(name) {
     </tr>`;
   }).join('');
 
-  const gameHeaders = games.map((g, gi) => {
-    const isDbl = DOUBLE_GAMES.includes(gi);
-    const isNtl1396 = NEUTRAL_GAMES.includes(gi);
-    const sep1396 = isNtl1396 ? `<span style="font-size:9px;opacity:0.4">vs</span>` : `<span style="font-size:9px;opacity:0.4">@</span>`;
-    return `<th>${g[0].slice(0,4).toUpperCase()}<br>${sep1396}<br>${g[1].slice(0,4).toUpperCase()}${isDbl ? `<span class="dbl">2PT</span>` : ''}${isNtl1396 ? `<span style="display:block;font-size:8px;color:var(--muted)">(N)</span>` : ''}</th>`;
-  }).join('');
+  // Headers: just use game numbers since each week has different matchups
+  const gameHeaders = Array.from({length: 13}, (_, gi) => `<th style="min-width:52px;font-size:11px">Game<br>${gi+1}</th>`).join('');
 
   document.getElementById('player-content').innerHTML = `
     <div class="player-name">${name}</div>
