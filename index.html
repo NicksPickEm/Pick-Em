@@ -2259,10 +2259,13 @@ function renderRecords(allData) {
     sParticipants.forEach(p => {
       ensure(p);
       let totalPts = 0, totalW = 0, totalL = 0;
-      Object.keys(sResults).forEach(w => {
-        const weekRes = sResults[w];
-        const weekPks = (sPicks[w] || {})[p];
-        const weekDbl = sDbl[w] || [];
+      Object.keys(sResults).forEach(wStr => {
+        const wNum = Number(wStr);
+        const weekRes = sResults[wStr];
+        const weekPks = (sPicks[wNum] || sPicks[wStr] || {})[p];
+        // Per-player doubles for 2025+
+        const pDbls = (data.playerDoubles && (data.playerDoubles[wNum] || data.playerDoubles[wStr] || {})[p]) || [];
+        const weekDbl = pDbls.length ? pDbls : ((sDbl[wNum] || sDbl[wStr]) || []);
         if (!weekPks || !weekRes) return;
         let weekPts = 0;
         for (let gi = 0; gi < 13; gi++) {
@@ -2277,9 +2280,12 @@ function renderRecords(allData) {
         totalPts += weekPts;
         if (isPerfectWeek(weekPks, weekRes)) stats[p].perfectWeeks++;
       });
-      Object.keys(sPicks).forEach(w => {
-        if (!sResults[w]) return;
-        const winners = computeWeekWinners(sPicks[w], sResults[w], sDbl[w] || []);
+      Object.keys(sResults).forEach(wStr => {
+        const wNum = Number(wStr);
+        const weekRes = sResults[wStr];
+        const weekPks = sPicks[wNum] || sPicks[wStr];
+        if (!weekRes || !weekPks) return;
+        const winners = computeWeekWinners(weekPks, weekRes, []);
         if (winners.includes(p)) stats[p].weekWins++;
       });
       seasonScores[p] = totalPts;
