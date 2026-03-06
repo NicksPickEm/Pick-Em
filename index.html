@@ -1044,7 +1044,8 @@ function savePicksRevealedLocal() {
   try { localStorage.setItem('picksRevealed_2025', JSON.stringify(picksRevealed)); } catch(e) {}
 }
 function isGameRevealed(week, gi) {
-  return !!(picksRevealed[week] && picksRevealed[week][gi]);
+  const arr = picksRevealed[week] || picksRevealed[String(week)] || picksRevealed[Number(week)];
+  return !!(arr && arr[gi]);
 }
 let sheetFavorites = {};
 let sheetDoubleGames = {};
@@ -1788,7 +1789,7 @@ function openPlayer(name) {
     const s = weekScore(w, name);
     const correct = picks[w][name].filter((pick, gi) => pick === results[w][gi]).length;
     const weekMax = Math.max(...participants.map(p => weekScore(w, p)));
-    weekScores.push({ week: w, score: s, correct, isWinner: s === weekMax });
+    const wWin = weekWinner(w); weekScores.push({ week: w, score: s, correct, isWinner: !!(wWin && wWin.winner === name) });
   }
 
   const totalCorrect = weekScores.reduce((sum, w) => sum + w.correct, 0);
@@ -2212,14 +2213,7 @@ function showRecords() {
     games: sheetGames,
     tbActual
   };
-    try {
-    renderRecords(allData);
-  } catch(e) {
-    const loading = document.getElementById('records-loading');
-    if (loading) { loading.style.display = 'block'; loading.textContent = 'Error: ' + e.message; }
-    const content2 = document.getElementById('records-content');
-    if (content2) content2.style.display = 'none';
-  }
+  renderRecords(allData);
 }
 
 function isPerfectWeek(playerPicks, weekResults) {
