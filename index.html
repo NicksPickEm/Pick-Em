@@ -1385,9 +1385,11 @@ function renderDistribution(week) {
   const res = results[week];
   const total = participants.length;
 
-  document.getElementById('dist-content').innerHTML = games.map((g, gi) => {
-    const isDbl = DOUBLE_GAMES.includes(gi);
-    const favIdx = favorites[gi];       // 0 or 1 — which team is the favorite
+  const distGames = sheetGames[week] || sheetGames[String(week)] || games;
+  const distFavs = sheetFavorites[week] || Array(13).fill(1);
+  document.getElementById('dist-content').innerHTML = distGames.map((g, gi) => {
+    const isDbl = (sheetDoubleGames[week] || []).includes(gi);
+    const favIdx = distFavs[gi] !== undefined ? distFavs[gi] : 1;       // 0 or 1 — which team is the favorite
     const dogIdx = 1 - favIdx;          // the other team
     const favTeam = g[favIdx];
     const dogTeam = g[dogIdx];
