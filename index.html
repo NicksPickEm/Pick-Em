@@ -690,22 +690,25 @@ function savePicksData() {
 }
 
 function renderAdminResults() {
-  const weekGames = games;
+  const weekGames = sheetGames[adminWeek] || games;
+  const weekDbls = sheetDoubleGames[adminWeek] || [];
+  const curResults = results[adminWeek] || [];
   let html = '';
   weekGames.forEach((g, gi) => {
-    const isDbl = DOUBLE_GAMES.includes(gi);
+    const isDbl = weekDbls.includes(gi);
+    const curWinner = curResults[gi];
     html += '<div class="admin-result-row">' +
       '<span class="admin-game-num">' + (gi + 1) + (isDbl ? ' <span style="color:var(--accent);font-size:10px">2PT</span>' : '') + '</span>' +
       '<div style="display:flex;gap:8px;flex:1">' +
-        '<button class="admin-result-btn" onclick="setResult(' + gi + ',0,this)">' + g[0] + '</button>' +
-        '<button class="admin-result-btn" onclick="setResult(' + gi + ',1,this)">' + g[1] + '</button>' +
+        '<button class="admin-result-btn' + (curWinner === 0 ? ' selected' : '') + '" onclick="setResult(' + gi + ',0,this)">' + g[0] + '</button>' +
+        '<button class="admin-result-btn' + (curWinner === 1 ? ' selected' : '') + '" onclick="setResult(' + gi + ',1,this)">' + g[1] + '</button>' +
       '</div>' +
     '</div>';
   });
   document.getElementById('admin-results-list').innerHTML = html;
 
   // Tiebreaker - show which game it's for (last game)
-  const tbGame = games[games.length - 1];
+  const tbGame = weekGames[weekGames.length - 1];
   const tbGameLabel = tbGame ? gameLabelPlain(games.length - 1, games, sheetNeutralGames[adminWeek] || NEUTRAL_GAMES) : 'Final Game';
   const tbCur = tbActual[adminWeek] || '';
   document.getElementById('admin-tb-wrap').innerHTML =
