@@ -1113,6 +1113,11 @@ function gameLabelPlain(gi, gamesArr, neutralArr) {
 
 function renderStandings() {
   const seasonData = computeSeasonData();
+  const completedWks = Array.from({length: 14}, (_, i) => i + 1).filter(w => hasResults(w)).length;
+  const swEl = document.getElementById('stat-weeks');
+  const spEl = document.getElementById('stat-participants');
+  if (swEl) swEl.textContent = completedWks;
+  if (spEl) spEl.textContent = participants.length;
   const prevSeasonData = participants.map(p => { let pts=0; for(let w=1;w<=WEEKS-1;w++){if(hasResults(w))pts+=weekScore(w,p);} return{name:p,pts}; }).sort((a,b)=>b.pts-a.pts);
   const prevRankMap = {}; prevSeasonData.forEach((d,i)=>{ prevRankMap[d.name]=i+1; });
   const maxPts = seasonData[0]?.pts || 1;
@@ -1260,13 +1265,15 @@ function renderPicksTable(week) {
     });
   } else {
     sorted = [...participants].sort((a, b) => {
-      const nameA = games[picksSort.col][picks[week][a][picksSort.col]];
-      const nameB = games[picksSort.col][picks[week][b][picksSort.col]];
+      const wg2 = sheetGames[week] || sheetGames[String(week)] || games;
+      const nameA = wg2[picksSort.col][picks[week][a][picksSort.col]];
+      const nameB = wg2[picksSort.col][picks[week][b][picksSort.col]];
       return picksSort.dir * nameA.localeCompare(nameB);
     });
   }
 
-  const headers = games.map((g, gi) => {
+  const weekGamesForPicks = sheetGames[week] || sheetGames[String(week)] || games;
+  const headers = weekGamesForPicks.map((g, gi) => {
     const isDbl = DOUBLE_GAMES.includes(gi);
     const isActive = picksSort.col === gi;
     const arrow = isActive ? (picksSort.dir === 1 ? ' ▲' : ' ▼') : '';
