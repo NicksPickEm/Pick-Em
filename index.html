@@ -378,6 +378,7 @@
   </div>
   <div id="admin-tab-picks" style="display:none">
     <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Tap a cell to toggle between the two teams.</div>
+    <div id="admin-picks-reveal-controls"></div>
     <div style="overflow-x:auto"><table id="admin-picks-table" class="picks-grid"></table></div>
     <button onclick="savePicksData()" class="admin-save-btn">Save Picks</button>
   </div>
@@ -600,6 +601,48 @@ function saveGamesSetup() {
   saveGamesToSheet(adminWeek);
 }
 
+function renderRevealControls() {
+  const wg = sheetGames[adminWeek] || sheetGames[String(adminWeek)] || games;
+  const revealed = picksRevealed[adminWeek] || Array(13).fill(false);
+  const allRevealed = revealed.every(Boolean);
+  const noneRevealed = revealed.every(v => !v);
+
+  let html = '<div style="margin-bottom:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px">';
+  html += '<div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Pick Visibility — Week ' + adminWeek + '</div>';
+  html += '<div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">';
+  html += '<button onclick="revealAllGames(' + adminWeek + ')" style="padding:5px 12px;border-radius:6px;border:1px solid var(--green);background:rgba(52,211,153,0.1);color:var(--green);font-size:11px;font-weight:700;cursor:pointer">Reveal All</button>';
+  html += '<button onclick="hideAllGames(' + adminWeek + ')" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gold);background:rgba(251,191,36,0.1);color:var(--gold);font-size:11px;font-weight:700;cursor:pointer">Hide All</button>';
+  html += '</div>';
+  html += '<div style="display:flex;flex-wrap:wrap;gap:6px">';
+  wg.forEach((g, gi) => {
+    const isRev = revealed[gi];
+    const label = 'G' + (gi+1) + ': ' + (g[0] ? g[0].slice(0,4).toUpperCase() : '?');
+    html += '<button onclick="toggleGameReveal(' + adminWeek + ',' + gi + ')" style="padding:4px 10px;border-radius:6px;border:1px solid ' + (isRev ? 'var(--green)' : 'var(--border)') + ';background:' + (isRev ? 'rgba(52,211,153,0.15)' : 'var(--surface2)') + ';color:' + (isRev ? 'var(--green)' : 'var(--muted)') + ';font-size:10px;font-weight:700;cursor:pointer">' + (isRev ? '✓ ' : '🔒 ') + label + '</button>';
+  });
+  html += '</div></div>';
+  const el = document.getElementById('admin-picks-reveal-controls');
+  if (el) el.innerHTML = html;
+}
+
+window.toggleGameReveal = function(week, gi) {
+  if (!picksRevealed[week]) picksRevealed[week] = Array(13).fill(false);
+  picksRevealed[week][gi] = !picksRevealed[week][gi];
+  savePicksRevealedLocal();
+  renderRevealControls();
+};
+window.revealAllGames = function(week) {
+  picksRevealed[week] = Array(13).fill(true);
+  savePicksRevealedLocal();
+  renderRevealControls();
+  showToast('✓ All Week ' + week + ' picks revealed');
+};
+window.hideAllGames = function(week) {
+  picksRevealed[week] = Array(13).fill(false);
+  savePicksRevealedLocal();
+  renderRevealControls();
+  showToast('🔒 All Week ' + week + ' picks hidden');
+};
+
 function renderAdminPicks() {
   const weekGames = sheetGames[adminWeek] || sheetGames[String(adminWeek)] || games;
   let thead = '<thead><tr><th class="name-col" style="position:sticky;left:0;z-index:3;background:var(--surface2)">Participant</th>';
@@ -632,6 +675,7 @@ function renderAdminPicks() {
   });
   tbody += '</tbody>';
   document.getElementById('admin-picks-table').innerHTML = thead + tbody;
+  renderRevealControls();
 }
 
 
@@ -985,6 +1029,23 @@ let activeSeason = CURRENT_SEASON; // which season is being viewed
 let availableSeasons = [CURRENT_SEASON]; // all seasons in sheet
 let adminGamesLoaded = false;
 let sheetGames = {};
+let picksRevealed = {}; // { week: [bool x13] } — per-game reveal flags
+function loadPicksRevealed() {
+  try {
+    const s = localStorage.getItem('picksRevealed_2025');
+    if (s) picksRevealed = JSON.parse(s);
+  } catch(e) {}
+  // Default: all games hidden
+  for (let w = 1; w <= 14; w++) {
+    if (!picksRevealed[w]) picksRevealed[w] = Array(13).fill(false);
+  }
+}
+function savePicksRevealedLocal() {
+  try { localStorage.setItem('picksRevealed_2025', JSON.stringify(picksRevealed)); } catch(e) {}
+}
+function isGameRevealed(week, gi) {
+  return !!(picksRevealed[week] && picksRevealed[week][gi]);
+}
 let sheetFavorites = {};
 let sheetDoubleGames = {};
 let sheetNeutralGames = {};
@@ -1304,8 +1365,12 @@ function renderPicksTable(week) {
     const isWinner = res && winnerInfo && p === winnerInfo.winner;
     const isMaxScore = res && weekScore(week, p) === maxScore;
 
-    const cells = games.map((g, gi) => {
-      const pick = picks[week][p][gi];
+    const cells = weekGamesForPicks.map((g, gi) => {
+      if (!isGameRevealed(week, gi)) {
+        return `<td><div style="width:44px;height:44px;border-radius:8px;background:var(--surface2);border:1px dashed var(--border);display:inline-flex;align-items:center;justify-content:center;color:var(--muted);font-size:18px;font-weight:700">?</div></td>`;
+      }
+      const pick = picks[week]?.[p]?.[gi];
+      if (pick === null || pick === undefined) return `<td style="opacity:0.3">—</td>`;
       const teamName = g[pick];
       if (!res) return `<td>${teamBadge(teamName, '')}</td>`;
       const status = pick === res[gi] ? 'correct' : 'wrong';
@@ -1313,7 +1378,7 @@ function renderPicksTable(week) {
     }).join('');
 
     // Tiebreaker cell
-    const guess = tbGuesses[week]?.[p];
+    const guess = (picksRevealed[week] || []).some(Boolean) ? tbGuesses[week]?.[p] : null;
     const diff = res && tbActualVal ? tbDiff(week, p) : null;
     const tbColor = isMaxScore && hasTie ? (isWinner ? 'var(--green)' : 'var(--red)') : 'var(--muted)';
     const tbCell = `<td style="border-left:2px solid var(--border);font-family:Bebas Neue,sans-serif;font-size:16px;color:${tbColor};text-align:center">
@@ -2037,6 +2102,7 @@ function saveResultsToSheet(week) {
 }
 
 function initApp() {
+  loadPicksRevealed();
   renderStandings();
   renderPicks(CURRENT_WEEK);
   renderDistribution(CURRENT_WEEK);
