@@ -1087,13 +1087,7 @@ const picks = {};
 // Actual combined score of final game: tbActual[week] = number
 const tbGuesses = {};
 const tbActual = {};
-for (let w = 1; w <= WEEKS; w++) {
-  tbGuesses[w] = {};
-  participants.forEach((p, pi) => {
-    // Random guess between 28-75 for sample data
-    tbGuesses[w][p] = 28 + Math.abs(Math.floor(Math.sin(pi * 37 + w * 91) * 10000) % 48);
-  });
-}
+
 
 function tbDiff(week, participant) {
   if (!tbActual[week] || tbGuesses[week]?.[participant] == null) return null;
@@ -2201,17 +2195,31 @@ function showRecords() {
   content.style.display = 'block';
   // Use already-loaded in-memory data instead of re-fetching
   const allData = {};
+  // Normalize picks/results/playerDoubles to string keys for renderRecords
+  const normalizedPicks = {};
+  Object.keys(picks).forEach(k => { normalizedPicks[String(k)] = picks[k]; });
+  const normalizedResults = {};
+  Object.keys(results).forEach(k => { normalizedResults[String(k)] = results[k]; });
+  const normalizedPlayerDoubles = {};
+  Object.keys(playerDoubles).forEach(k => { normalizedPlayerDoubles[String(k)] = playerDoubles[k]; });
   allData[activeSeason] = {
     participants,
-    picks,
-    results,
+    picks: normalizedPicks,
+    results: normalizedResults,
     doubleGames: sheetDoubleGames,
-    playerDoubles,
+    playerDoubles: normalizedPlayerDoubles,
     favorites: sheetFavorites,
     games: sheetGames,
     tbActual
   };
-  renderRecords(allData);
+    try {
+    renderRecords(allData);
+  } catch(e) {
+    const loading = document.getElementById('records-loading');
+    if (loading) { loading.style.display = 'block'; loading.textContent = 'Error: ' + e.message; }
+    const content2 = document.getElementById('records-content');
+    if (content2) content2.style.display = 'none';
+  }
 }
 
 function isPerfectWeek(playerPicks, weekResults) {
@@ -2461,7 +2469,7 @@ function applySheetData(data) {
         const tb = arr[13];
         if (tb !== null && tb !== undefined) {
           if (!tbGuesses[w]) tbGuesses[w] = {};
-          tbGuesses[w][p] = tb;
+          tbGuesses[Number(w)][p] = tb;
         }
       });
     });
