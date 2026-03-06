@@ -1031,20 +1031,17 @@ let adminGamesLoaded = false;
 let sheetGames = {};
 let picksRevealed = {}; // { week: [bool x13] } — per-game reveal flags
 function loadPicksRevealed() {
-  try {
-    const s = localStorage.getItem('picksRevealed_2025');
-    if (s) picksRevealed = JSON.parse(s);
-  } catch(e) {}
-  // Normalize keys to numbers and fill missing weeks
-  const normalized = {};
-  Object.keys(picksRevealed).forEach(k => { normalized[Number(k)] = picksRevealed[k]; });
-  picksRevealed = normalized;
+  // picksRevealed loaded from sheet in applySheetData — just fill missing weeks
   for (let w = 1; w <= 14; w++) {
     if (!picksRevealed[w]) picksRevealed[w] = Array(13).fill(false);
   }
 }
 function savePicksRevealedLocal() {
   try { localStorage.setItem('picksRevealed_2025', JSON.stringify(picksRevealed)); } catch(e) {}
+  // Also save to sheet for cross-device sync
+  apiCall({ action: 'saveMetadata', season: CURRENT_SEASON,
+    data: { picksRevealed }
+  }, d => { if (!d) console.warn('Metadata save failed'); });
 }
 function isGameRevealed(week, gi) {
   const arr = picksRevealed[week] || picksRevealed[String(week)] || picksRevealed[Number(week)];
@@ -2439,6 +2436,10 @@ function applySheetData(data) {
   if (data.neutralGames) {
     sheetNeutralGames = {};
     Object.keys(data.neutralGames).forEach(k => sheetNeutralGames[Number(k)] = data.neutralGames[k]);
+  }
+  if (data.picksRevealed) {
+    picksRevealed = {};
+    Object.keys(data.picksRevealed).forEach(k => picksRevealed[Number(k)] = data.picksRevealed[k]);
   }
   if (data.playerDoubles) {
     Object.keys(data.playerDoubles).forEach(w => { playerDoubles[Number(w)] = data.playerDoubles[w]; });
