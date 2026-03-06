@@ -1035,7 +1035,10 @@ function loadPicksRevealed() {
     const s = localStorage.getItem('picksRevealed_2025');
     if (s) picksRevealed = JSON.parse(s);
   } catch(e) {}
-  // Default: all games hidden
+  // Normalize keys to numbers and fill missing weeks
+  const normalized = {};
+  Object.keys(picksRevealed).forEach(k => { normalized[Number(k)] = picksRevealed[k]; });
+  picksRevealed = normalized;
   for (let w = 1; w <= 14; w++) {
     if (!picksRevealed[w]) picksRevealed[w] = Array(13).fill(false);
   }
@@ -1763,6 +1766,7 @@ function showPage(id, btn) {
   lastPage = id;
   lastBtn = btn;
   if (id === 'charts') renderCharts();
+  if (id === 'records') showRecords();
 }
 
 function goBack() {
