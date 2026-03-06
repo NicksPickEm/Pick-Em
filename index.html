@@ -480,12 +480,13 @@ function renderAdminTab(tab) {
 
 function renderAdminGames() {
   // All teams from FBS_TEAMS plus extras used in this league
-  const extraTeams = ['Air Force','App State','Arizona St','Boise St','Boston College',
-    'East Carolina','Florida Atlantic','Florida Intl','Florida St','Fresno St',
-    'Georgia Southern','Hawaii','Iowa State','Kansas St','Miami Ohio','Michigan St',
-    'Mississippi St','NC State','North Texas','Ohio State','Ole Miss','Oregon St',
-    'Penn St','San Diego St','South Florida','Southern Miss','Texas A&M','Texas Tech',
-    'Utah State','Virginia Tech','Wake Forest','Washington St','West Virginia'];
+  const extraTeams = ['Air Force','Appalachian State','Arizona State','Boise State',
+    'East Carolina','Florida Atlantic','Florida International','Florida State','Fresno State',
+    'Georgia Southern','Hawaii','Iowa State','Kansas State','Miami (OH)','Michigan State',
+    'Mississippi State','NC State','North Texas','Ohio State','Ole Miss','Oregon State',
+    'Penn State','San Diego State','South Florida','Southern Mississippi','Texas A&M','Texas Tech',
+    'Utah State','Virginia Tech','Wake Forest','Washington State','West Virginia','UTEP','UTSA',
+    'LSU','TCU','BYU','SMU','USC','UCLA','UCF','UNLV'];
   const allTeamNames = Array.from(new Set([...Object.keys(FBS_TEAMS), ...extraTeams])).sort();
 
   const makeSelect = (id, currentName, gi, slot) => {
