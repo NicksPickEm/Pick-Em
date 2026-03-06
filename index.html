@@ -1769,8 +1769,9 @@ function openPlayer(name) {
   // ── 2PT record ───────────────────────────────────────────────────────────
   let dblCorrect = 0, dblTotal = 0;
   for (let w = 1; w <= WEEKS; w++) {
-    if (!results[w] || !picks[w]?.[name]) continue;
-    DOUBLE_GAMES.forEach(gi => {
+    if (!hasResults(w) || !picks[w]?.[name]) continue;
+    const pDbls = (playerDoubles[w] && playerDoubles[w][name]) ? playerDoubles[w][name] : [];
+    pDbls.forEach(gi => {
       if (picks[w][name][gi] === results[w][gi]) dblCorrect++;
       dblTotal++;
     });
@@ -1782,9 +1783,11 @@ function openPlayer(name) {
   // We count: how many underdog wins occurred, and how many did this person correctly pick
   let underdogWins = 0, underdogCorrect = 0;
   for (let w = 1; w <= WEEKS; w++) {
-    if (!results[w] || !picks[w]?.[name]) continue;
-    games.forEach((g, gi) => {
-      const favIdx = favorites[gi];
+    if (!hasResults(w) || !picks[w]?.[name]) continue;
+    const wFavs = sheetFavorites[w] || sheetFavorites[String(w)] || Array(13).fill(1);
+    const wGames = sheetGames[w] || sheetGames[String(w)] || games;
+    wGames.forEach((g, gi) => {
+      const favIdx = wFavs[gi] !== undefined ? wFavs[gi] : 1;
       const upset = results[w][gi] !== favIdx; // underdog won
       if (upset) {
         underdogWins++;
@@ -1799,8 +1802,9 @@ function openPlayer(name) {
   // called the result of that game (regardless of which side they picked)
   const teamRecords = {};
   for (let w = 1; w <= WEEKS; w++) {
-    if (!results[w] || !picks[w]?.[name]) continue;
-    games.forEach((g, gi) => {
+    if (!hasResults(w) || !picks[w]?.[name]) continue;
+    const wGamesT = sheetGames[w] || sheetGames[String(w)] || games;
+    wGamesT.forEach((g, gi) => {
       const correct = picks[w][name][gi] === results[w][gi];
       g.forEach(team => {
         if (!teamRecords[team]) teamRecords[team] = { correct: 0, total: 0 };
