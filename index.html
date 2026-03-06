@@ -709,7 +709,7 @@ function renderAdminResults() {
 
   // Tiebreaker - show which game it's for (last game)
   const tbGame = weekGames[weekGames.length - 1];
-  const tbGameLabel = tbGame ? gameLabelPlain(games.length - 1, games, sheetNeutralGames[adminWeek] || NEUTRAL_GAMES) : 'Final Game';
+  const tbGameLabel = tbGame ? gameLabelPlain(weekGames.length - 1, weekGames, sheetNeutralGames[adminWeek] || NEUTRAL_GAMES) : 'Final Game';
   const tbCur = tbActual[adminWeek] || '';
   document.getElementById('admin-tb-wrap').innerHTML =
     '<div style="margin:16px 0;background:var(--surface);border:1px solid var(--gold);border-radius:10px;padding:14px">' +
