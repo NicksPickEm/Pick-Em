@@ -77,8 +77,8 @@
   .dist-split-bar-wrap{flex:1}
   .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px}
   .chart-title{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1.5px;color:var(--accent);margin-bottom:14px}
-  .pure-bar-chart{display:flex;align-items:flex-end;gap:4px;height:160px;padding-bottom:20px;padding-top:20px;position:relative}
-  .pure-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end}
+  .pure-bar-chart{display:flex;align-items:flex-end;gap:4px;height:160px;padding-bottom:20px;padding-top:20px;position:relative;overflow-x:auto;overflow-y:hidden}
+  .pure-bar-col{flex:0 0 32px;width:32px;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end}
   .pure-bar-val{font-family:'Bebas Neue',sans-serif;font-size:11px;margin-bottom:2px;white-space:nowrap}
   .pure-bar-outer{width:100%;flex:1;display:flex;align-items:flex-end;background:var(--surface2);border-radius:3px 3px 0 0;overflow:hidden}
   .pure-bar-inner{width:100%;border-radius:3px 3px 0 0;min-height:2px}
@@ -103,15 +103,6 @@
   .profile-tab{flex:1;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
   .profile-tab.active{background:var(--accent);border-color:var(--accent);color:#0a1e2e}
   .profile-tab:hover:not(.active){border-color:var(--accent);color:var(--accent)}
-  .bump-controls{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
-  .bump-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;cursor:pointer;transition:all .15s}
-  .bump-btn.active{background:var(--accent);border-color:var(--accent);color:#0a1e2e}
-  .bump-btn:hover:not(.active){border-color:var(--accent);color:var(--accent)}
-  .bump-checklist{display:grid;grid-template-columns:1fr 1fr;gap:4px;max-height:200px;overflow-y:auto;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:14px}
-  .bump-check-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text);cursor:pointer;padding:3px 4px;border-radius:4px}
-  .bump-check-item:hover{background:var(--border)}
-  .bump-check-item input{accent-color:var(--accent);cursor:pointer}
-  .bump-done-btn{width:100%;margin-top:8px;padding:10px;background:var(--accent);border:none;border-radius:8px;color:#0a1e2e;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
   .admin-nav-btn{border-left:1px solid var(--border)!important;color:var(--muted)!important}
   .admin-game-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border)}
   .admin-game-num{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--muted);width:20px;flex-shrink:0}
@@ -165,9 +156,11 @@
     <div class="stat-card"><div class="stat-value" id="stat-participants">—</div><div class="stat-label">PARTICIPANTS</div></div>
   </div>
   <table class="standings-table">
-    <thead><tr>
+    <thead><tr id="standings-thead-row">
       <th style="width:36px">#</th>
       <th>Name</th>
+      <th style="text-align:center">Upset%</th>
+      <th style="text-align:center">2PT</th>
       <th style="text-align:right">W</th>
       <th style="text-align:right">L</th>
       <th style="text-align:right">PTS</th>
@@ -193,8 +186,8 @@
 <div class="page" id="page-charts">
   <div class="section-title">Charts &amp; Graphs</div>
   <div class="chart-card">
-    <div class="chart-title">Weekly Consensus Accuracy</div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:10px">% of picks that were correct each week</div>
+    <div class="chart-title">League Pick Accuracy</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px">% of all picks league-wide that were correct each week</div>
     <div id="chart-consensus"></div>
   </div>
   <div class="chart-card">
@@ -209,19 +202,10 @@
     <table class="standings-table" id="winners-table"></table>
   </div>
   <div class="chart-card">
-    <div class="chart-title">Season Standings by Week</div>
-    <div class="bump-controls">
-      <button class="bump-btn active" onclick="setBumpFilter('top15',this)">Top 15</button>
-      <button class="bump-btn" onclick="setBumpFilter('16-30',this)">16&ndash;30</button>
-      <button class="bump-btn" onclick="setBumpFilter('31-45',this)">31&ndash;45</button>
-      <button class="bump-btn" onclick="setBumpFilter('46plus',this)">46+</button>
-      <button class="bump-btn" onclick="setBumpFilter('custom',this)">Custom</button>
-    </div>
-    <div id="bump-checklist-wrap" style="display:none">
-      <div class="bump-checklist" id="bump-checklist"></div>
-      <button class="bump-done-btn" onclick="closeBumpChecklist()">Done &mdash; Show Chart</button>
-    </div>
-    <div id="chart-bump" style="min-height:480px"></div>
+    <div class="chart-title">Rankings Trend</div>
+    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Compare players (up to 5)</div>
+    <div id="rank-trend-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"></div>
+    <div style="overflow-x:auto"><div id="chart-rank-trend"></div></div>
   </div>
 </div>
 
@@ -284,26 +268,34 @@
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;">
       <div style="font-size:13px;font-weight:700;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:16px">Commissioner</div>
       <div style="font-size:16px;font-weight:700;color:var(--text)">Nick Picaut</div>
+      <div style="color:var(--muted);font-size:12px;font-style:italic;margin-top:4px">Head of Appeals Department. All appeals denied.</div>
       <div style="color:var(--muted);font-size:13px;margin-top:6px">📧 Npicaut86@gmail.com &nbsp;|&nbsp; 📱 386-295-7913</div>
       <div style="color:var(--muted);font-size:12px;margin-top:8px">Commissioner has final say on all disputes and rule interpretations.</div>
     </div>
 
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;">
-      <div style="font-size:13px;font-weight:700;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:16px">Entry</div>
-      <div style="color:var(--text);font-size:14px;line-height:1.7">
-        <b>$50 one-time entry fee</b> per season. Invitation only — no mid-season joins.<br>
-        Pot breakdown: <b>$50/week × 14 weeks = $700</b> in weekly prizes. Remaining pot split <b>60% / 30% / 10%</b> for 1st, 2nd, and 3rd place at season end.
+      <div style="font-size:13px;font-weight:700;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Entry</div>
+      <div style="color:var(--muted);font-size:13px;margin-bottom:16px">$50 entry fee per season</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div style="background:var(--surface2);border-radius:8px;padding:14px">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Weekly Prize</div>
+          <div style="font-size:22px;font-weight:800;color:var(--green)">$50</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">to the weekly high scorer</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:14px">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Season Payout</div>
+          <div style="font-size:14px;font-weight:800;color:var(--text)">60 / 30 / 10</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">split of remaining pot &mdash; 1st / 2nd / 3rd</div>
+        </div>
       </div>
-      <div style="display:flex;gap:8px;margin-top:14px">
-        <div style="flex:6;background:var(--surface2);border-radius:6px;padding:12px;text-align:center">
-          <div style="font-size:20px;font-weight:800;color:var(--green)">60%</div><div style="font-size:11px;color:var(--muted);margin-top:2px">1st Place</div>
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Payment</div>
+        <div style="color:var(--text);font-size:13px;line-height:1.8">
+          Venmo: <b>@Nick-Picaut</b><br>
+          PayPal: <b>npicaut86@gmail.com</b><br>
+          Zelle: <b>386-295-7913</b>
         </div>
-        <div style="flex:3;background:var(--surface2);border-radius:6px;padding:12px;text-align:center">
-          <div style="font-size:20px;font-weight:800;color:var(--accent)">30%</div><div style="font-size:11px;color:var(--muted);margin-top:2px">2nd Place</div>
-        </div>
-        <div style="flex:1;background:var(--surface2);border-radius:6px;padding:12px;text-align:center">
-          <div style="font-size:20px;font-weight:800;color:var(--gold)">10%</div><div style="font-size:11px;color:var(--muted);margin-top:2px">3rd Place</div>
-        </div>
+        <div style="color:var(--muted);font-size:11px;margin-top:6px">Verify recipient by last 4 digits of phone #: <b>7913</b></div>
       </div>
     </div>
 
@@ -330,15 +322,15 @@
       <div style="font-size:13px;font-weight:700;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:16px">Picks &amp; Deadlines</div>
       <div style="color:var(--text);font-size:14px;line-height:1.7">
         Submit picks via <b>text or email to the commissioner</b>. A receipt will be provided confirming your picks.<br><br>
-        <b>Thursday/Friday games</b> lock at kickoff. <b>All other games</b> lock at noon Saturday. You may change picks up until the deadline.<br><br>
-        Picks remain <b>hidden until each game kicks off</b>, then are revealed.
+        <b>Thursday/Friday games</b> lock at kickoff. <b>All other games</b> lock at noon Saturday. You may change picks up until noon Saturday (or kickoff, for Thursday/Friday games).<br><br>
+        Picks remain <b>hidden until kickoff</b>. All picks revealed by <b>noon Saturday</b>.
       </div>
     </div>
 
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;">
       <div style="font-size:13px;font-weight:700;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:16px">Weekly Prize &amp; Tiebreakers</div>
       <div style="color:var(--text);font-size:14px;line-height:1.7">
-        <b>$50 to the highest scorer</b> each week. In the event of a tie, the player whose tiebreaker guess is closest to the actual score of the designated tiebreaker game wins. Both over and under count.<br><br>
+        <b>$50 to the highest scorer</b> each week. The <b>tiebreaker game is always the last game listed that week</b> — you guess the <b>combined score of both teams</b>. In the event of a tie, the player whose guess is closest to the actual combined score wins. Both over and under count.<br><br>
         <b>If still tied after tiebreaker:</b> tied players choose to split the $50 or roll it to the next week. If rolled, only the tied players compete head-to-head for the rollover prize the following week (independent of that week's regular prize). No picks submitted = forfeit. Rollovers can chain indefinitely.
       </div>
     </div>
@@ -937,7 +929,7 @@ const FBS_TEAMS = {
   "Delaware":          { abbr: "DEL",  nick: "HENS",    bg: "#00539f", border: "#ffd200", text: "#ffd200" },
   "FIU":               { abbr: "FIU",  nick: "PANTHERS",bg: "#081e3f", border: "#b6862c", text: "#b6862c" },
   "Jacksonville State":{ abbr: "JSU",  nick: "GAMECKS", bg: "#d01c2a", border: "#fff", text: "#fff" },
-  "Kennesaw State":    { abbr: "KSU",  nick: "OWLS",    bg: "#fdbb30", border: "#000", text: "#000" },
+  "Kennesaw State":    { abbr: "KENN", nick: "OWLS",    bg: "#fdbb30", border: "#000", text: "#000" },
   "Liberty":           { abbr: "LIB",  nick: "FLAMES",  bg: "#002868", border: "#c41230", text: "#c41230" },
   "Middle Tennessee":  { abbr: "MTSU", nick: "BLUE RDR",bg: "#0066cc", border: "#fff", text: "#fff" },
   "Missouri State":    { abbr: "MOST", nick: "BEARS",   bg: "#4e1d22", border: "#a41e35", text: "#fff" },
@@ -947,13 +939,13 @@ const FBS_TEAMS = {
   "Western Kentucky":  { abbr: "WKU",  nick: "HILLTPRS",bg: "#c60c30", border: "#fff", text: "#fff" },
   // MAC
   "Akron":             { abbr: "AKR",  nick: "ZIPS",    bg: "#041e42", border: "#a89968", text: "#a89968" },
-  "Ball State":        { abbr: "BSU",  nick: "CARDS",   bg: "#ba0c2f", border: "#ccc", text: "#fff" },
+  "Ball State":        { abbr: "BALL", nick: "CARDS",   bg: "#ba0c2f", border: "#ccc", text: "#fff" },
   "Bowling Green":     { abbr: "BGSU", nick: "FALCONS", bg: "#4f2c1d", border: "#f56600", text: "#f56600" },
   "Buffalo":           { abbr: "BUFF", nick: "BULLS",   bg: "#005bbb", border: "#fff", text: "#fff" },
   "Central Michigan":  { abbr: "CMU",  nick: "CHIPPWAS",bg: "#6a0032", border: "#ffc82e", text: "#ffc82e" },
   "Eastern Michigan":  { abbr: "EMU",  nick: "EAGLES",  bg: "#046a38", border: "#fff", text: "#fff" },
   "Kent State":        { abbr: "KENT", nick: "GOLDEN F",bg: "#002664", border: "#eaab00", text: "#eaab00" },
-  "Miami (OH)":        { abbr: "MIA",  nick: "REDHAWKS",bg: "#b61e2e", border: "#fff", text: "#fff" },
+  "Miami (OH)":        { abbr: "MOH",  nick: "REDHAWKS",bg: "#b61e2e", border: "#fff", text: "#fff" },
   "Northern Illinois": { abbr: "NIU",  nick: "HUSKIES", bg: "#c8102e", border: "#000", text: "#fff" },
   "Ohio":              { abbr: "OHIO", nick: "BOBCATS", bg: "#00694e", border: "#cfc493", text: "#cfc493" },
   "Toledo":            { abbr: "TOL",  nick: "ROCKETS", bg: "#003087", border: "#ffb81c", text: "#ffb81c" },
@@ -1008,6 +1000,145 @@ const FBS_TEAMS = {
   "Notre Dame":        { abbr: "ND",   nick: "IRISH",   bg: "#0c2340", border: "#c99700", text: "#c99700" },
 };
 
+// Safely embed a name inside onclick="fn('...')" — escapes backslashes/quotes for both JS and HTML attribute contexts
+function escName(str) {
+  return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+// Prefer the curated FBS_TEAMS abbreviation (avoids collisions like "Michigan" vs "Michigan State" both truncating to "MICH")
+function teamAbbr(name) {
+  return (FBS_TEAMS[name] && FBS_TEAMS[name].abbr) || (name || '').slice(0, 4).toUpperCase();
+}
+
+const RANK_TREND_COLORS = ['#38bdf8','#34d399','#fbbf24','#f472b6','#a78bfa'];
+
+// Computes each participant's rank position for every completed week
+function computeRankAtWeek() {
+  const completedWeeks = [];
+  for (let w = 1; w <= WEEKS; w++) { if (hasResults(w)) completedWeeks.push(w); }
+  const W = completedWeeks.length;
+  const cumPts = {};
+  participants.forEach(p => { cumPts[p] = []; });
+  completedWeeks.forEach(w => {
+    participants.forEach(p => {
+      const prev = cumPts[p].length ? cumPts[p][cumPts[p].length - 1] : 0;
+      cumPts[p].push(prev + weekScore(w, p));
+    });
+  });
+  const rankAtWeek = {};
+  participants.forEach(p => { rankAtWeek[p] = []; });
+  for (let wi = 0; wi < W; wi++) {
+    const sorted = participants.slice().sort((a, b) => cumPts[b][wi] - cumPts[a][wi]);
+    sorted.forEach((p, ri) => { rankAtWeek[p].push(ri + 1); });
+  }
+  return { completedWeeks, W, rankAtWeek };
+}
+
+let rankTrendSelected = [];
+function loadRankTrendSelected() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('pickem_rankTrendSelected') || '[]');
+    rankTrendSelected = saved.filter(p => participants.includes(p));
+  } catch (e) { rankTrendSelected = []; }
+}
+function saveRankTrendSelected() {
+  try { localStorage.setItem('pickem_rankTrendSelected', JSON.stringify(rankTrendSelected)); } catch (e) {}
+}
+window.addRankTrendPlayer = function(name) {
+  if (!name || rankTrendSelected.includes(name) || rankTrendSelected.length >= 5) return;
+  rankTrendSelected.push(name);
+  saveRankTrendSelected();
+  renderRankTrendChips();
+  renderRankTrendChart();
+};
+window.removeRankTrendPlayer = function(name) {
+  const idx = rankTrendSelected.indexOf(name);
+  if (idx > -1) rankTrendSelected.splice(idx, 1);
+  saveRankTrendSelected();
+  renderRankTrendChips();
+  renderRankTrendChart();
+};
+
+function renderRankTrendChips() {
+  const wrap = document.getElementById('rank-trend-chips');
+  if (!wrap) return;
+  let html = rankTrendSelected.map((p, i) => {
+    const color = RANK_TREND_COLORS[i % RANK_TREND_COLORS.length];
+    return `<span style="background:${color};color:#0a0a0a;font-size:12px;font-weight:700;padding:5px 10px;border-radius:14px;display:inline-flex;align-items:center;gap:6px">${p}<span style="cursor:pointer" onclick="removeRankTrendPlayer('${escName(p)}')">✕</span></span>`;
+  }).join('');
+  if (rankTrendSelected.length < 5) {
+    const remaining = participants.filter(p => !rankTrendSelected.includes(p));
+    if (remaining.length) {
+      html += `<select onchange="addRankTrendPlayer(this.value); this.value=''" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:12px;padding:5px 10px;border-radius:14px;font-family:'Inter',sans-serif">
+        <option value="">+ Add player</option>
+        ${remaining.map(p => `<option value="${p.replace(/"/g, '&quot;')}">${p}</option>`).join('')}
+      </select>`;
+    }
+  }
+  if (!rankTrendSelected.length) {
+    html = '<span style="color:var(--muted);font-size:12px;align-self:center">Select up to 5 players to compare —&nbsp;</span>' + html;
+  }
+  wrap.innerHTML = html;
+}
+
+function renderRankTrendChart() {
+  const container = document.getElementById('chart-rank-trend');
+  if (!container) return;
+  if (!rankTrendSelected.length) {
+    container.innerHTML = '<div style="color:var(--muted);padding:20px;text-align:center;font-size:13px">Select players above to see their rank trend</div>';
+    return;
+  }
+  const { completedWeeks, W, rankAtWeek } = computeRankAtWeek();
+  if (W === 0) {
+    container.innerHTML = '<div style="color:var(--muted);padding:20px;text-align:center;font-size:13px">No completed weeks yet</div>';
+    return;
+  }
+  const N = participants.length;
+  const colW = 70, padL = 40, padR = 90, padT = 20, chartH = 200, padB = 26;
+  const svgW = padL + Math.max(W - 1, 0) * colW + padR;
+  const svgH = padT + chartH + padB;
+
+  function xp(wi) { return padL + wi * colW; }
+  function yp(rank) { return padT + ((rank - 1) / Math.max(N - 1, 1)) * chartH; }
+
+  let grid = '';
+  const step = Math.max(1, Math.ceil(N / 6));
+  for (let r = 1; r <= N; r += step) {
+    const y = yp(r);
+    grid += `<line x1="${padL}" y1="${y}" x2="${svgW - padR}" y2="${y}" stroke="#2e4060" stroke-width="0.5"/>`;
+    grid += `<text x="${padL - 6}" y="${y + 4}" fill="#64748b" font-size="11" text-anchor="end">#${r}</text>`;
+  }
+  completedWeeks.forEach((w, wi) => {
+    grid += `<text x="${xp(wi)}" y="${padT + chartH + 20}" fill="#64748b" font-size="11" text-anchor="middle">Wk${w}</text>`;
+  });
+
+  let paths = '', dots = '', labels = '';
+  rankTrendSelected.forEach((p, ci) => {
+    const color = RANK_TREND_COLORS[ci % RANK_TREND_COLORS.length];
+    const ranks = rankAtWeek[p] || [];
+    let d = '';
+    for (let wi = 0; wi < W; wi++) {
+      const x = xp(wi), y = yp(ranks[wi] || N);
+      if (wi === 0) { d += `M${x.toFixed(1)},${y.toFixed(1)}`; }
+      else {
+        const px = xp(wi - 1), py = yp(ranks[wi - 1] || N);
+        const cx = ((px + x) / 2).toFixed(1);
+        d += ` C${cx},${py.toFixed(1)} ${cx},${y.toFixed(1)} ${x.toFixed(1)},${y.toFixed(1)}`;
+      }
+      dots += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5" fill="${color}" stroke="#111827" stroke-width="1.5"/>`;
+    }
+    paths += `<path d="${d}" fill="none" stroke="${color}" stroke-width="2"/>`;
+    const startRank = ranks[0];
+    const endRank = ranks[W - 1];
+    const startY = yp(startRank);
+    const lastY = yp(endRank);
+    labels += `<text x="${padL - 6}" y="${startY + 4}" fill="${color}" font-size="10" font-weight="700" text-anchor="end">#${startRank}</text>`;
+    labels += `<text x="${svgW - padR + 8}" y="${lastY + 4}" fill="${color}" font-size="11" font-weight="700" style="cursor:pointer" onclick="openPlayer('${escName(p)}')"><tspan font-size="10" opacity="0.85">#${endRank}</tspan> ${p}</text>`;
+  });
+
+  container.innerHTML = `<svg width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}" style="display:block">${grid}${paths}${dots}${labels}</svg>`;
+}
+
 function teamBadge(teamName, status) {
   const t = FBS_TEAMS[teamName] || { abbr: teamName.slice(0,4).toUpperCase(), nick: '', bg: '#333', border: '#666', text: '#fff' };
   const borderColor = status === 'correct' ? '#34d399' : status === 'wrong' ? '#f87171' : t.border;
@@ -1016,9 +1147,8 @@ function teamBadge(teamName, status) {
                   : status === 'wrong'   ? '<div style="font-size:9px;color:#f87171;line-height:1;margin-top:1px">✗</div>' 
                   : '';
   return `<div style="display:inline-flex;flex-direction:column;align-items:center;opacity:${opacity}">
-    <div style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:36px;height:30px;border-radius:4px;border:2px solid ${borderColor};background:${t.bg};color:${t.text};font-family:Bebas Neue,sans-serif;line-height:1.1;text-align:center">
-      <span style="font-size:11px;letter-spacing:0.3px">${t.abbr}</span>
-      ${t.nick ? `<span style="font-size:7px;opacity:0.8">${t.nick.slice(0,6)}</span>` : ''}
+    <div style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:26px;border-radius:4px;border:2px solid ${borderColor};background:${t.bg};color:${t.text};font-family:Bebas Neue,sans-serif">
+      <span style="font-size:12px;letter-spacing:0.3px">${t.abbr}</span>
     </div>${indicator}</div>`;
 }
 
@@ -1119,13 +1249,14 @@ function weekScore(week, participant) {
 function computeSeasonData() {
   return participants.map(p => {
     let pts = 0, wins = 0, losses = 0, dblCorrect = 0, dblTotal = 0;
+    let underdogWins = 0, underdogCorrect = 0;
     let weekScores = [], weekResults = [];
     for (let w = 1; w <= WEEKS; w++) {
       if (!hasResults(w)) continue;
       const s = weekScore(w, p);
       pts += s; weekScores.push(s);
-      const max = Math.max(...participants.map(pp => weekScore(w, pp)));
-      const isWin = s === max;
+      const wInfo = weekWinner(w);
+      const isWin = !!(wInfo && wInfo.winner === p);
       weekResults.push(isWin ? 'W' : 'L');
       // W/L = correct/incorrect picks
       if (picks[w] && picks[w][p] && results[w]) {
@@ -1140,19 +1271,30 @@ function computeSeasonData() {
         dblTotal++;
         if (picks[w] && picks[w][p] && picks[w][p][gi] === results[w][gi]) dblCorrect++;
       });
+      // Upset % — how many of the season's actual upsets this player correctly predicted
+      const wFavs = sheetFavorites[w] || Array(13).fill(1);
+      for (let gi = 0; gi < 13; gi++) {
+        const favIdx = wFavs[gi] !== undefined ? wFavs[gi] : 1;
+        const upset = results[w][gi] !== favIdx;
+        if (upset) {
+          underdogWins++;
+          if (picks[w] && picks[w][p] && picks[w][p][gi] === results[w][gi]) underdogCorrect++;
+        }
+      }
     }
     let streak = 0, streakType = weekResults[weekResults.length - 1] || 'W';
     for (let i = weekResults.length - 1; i >= 0; i--) { if (weekResults[i] === streakType) streak++; else break; }
-    return { name: p, pts, wins, losses, dblCorrect, dblTotal, weekScores, streak, streakType, last5: weekResults.slice(-5) };
+    const upsetPct = underdogWins > 0 ? Math.round((underdogCorrect / underdogWins) * 100) : 0;
+    return { name: p, pts, wins, losses, dblCorrect, dblTotal, weekScores, streak, streakType, last5: weekResults.slice(-5), underdogWins, underdogCorrect, upsetPct };
   }).sort((a, b) => b.pts - a.pts);
 }
 function computeWeeklyWinners() {
   const ww = {};
   for (let w = 1; w <= WEEKS; w++) {
     if (!hasResults(w)) continue;
-    let best = null, bestScore = -1;
-    participants.forEach(p => { const s = weekScore(w, p); if (s > bestScore) { bestScore = s; best = p; } });
-    ww[w] = { name: best, score: bestScore };
+    const wInfo = weekWinner(w);
+    if (!wInfo) continue;
+    ww[w] = { name: wInfo.winner, score: weekScore(w, wInfo.winner), tiebreak: wInfo.tiebreak };
   }
   return ww;
 }
@@ -1175,25 +1317,41 @@ function gameLabelPlain(gi, gamesArr, neutralArr) {
 }
 
 function renderStandings() {
-  const seasonData = computeSeasonData();
+  const seasonDataRaw = computeSeasonData(); // sorted by pts desc — this defines TRUE season rank
+  seasonDataRaw.forEach((d, i) => { d.rank = i + 1; });
   const completedWks = Array.from({length: 14}, (_, i) => i + 1).filter(w => hasResults(w)).length;
   const swEl = document.getElementById('stat-weeks');
   const spEl = document.getElementById('stat-participants');
-  if (swEl) swEl.textContent = completedWks;
+  if (swEl) swEl.textContent = completedWks + ' / ' + WEEKS;
   if (spEl) spEl.textContent = participants.length;
-  const prevSeasonData = participants.map(p => { let pts=0; for(let w=1;w<=WEEKS-1;w++){if(hasResults(w))pts+=weekScore(w,p);} return{name:p,pts}; }).sort((a,b)=>b.pts-a.pts);
+  const completedWeeksList = Array.from({length: WEEKS}, (_, i) => i + 1).filter(w => hasResults(w));
+  const prevWeeksList = completedWeeksList.slice(0, -1);
+  const prevSeasonData = participants.map(p => {
+    let pts = 0;
+    prevWeeksList.forEach(w => { pts += weekScore(w, p); });
+    return { name: p, pts };
+  }).sort((a, b) => b.pts - a.pts);
   const prevRankMap = {}; prevSeasonData.forEach((d,i)=>{ prevRankMap[d.name]=i+1; });
-  const maxPts = seasonData[0]?.pts || 1;
-  const leader = seasonData[0]?.pts || 0;
+  const leader = seasonDataRaw[0]?.pts || 0;
 
-  // Max possible points remaining in season
-  const weeksLeft = Array.from({length: 14}, (_, i) => i + 1).filter(w => !hasResults(w)).length;
-  const maxPerWeek = 16; // 3x2pt + 10x1pt
-  const maxRemaining = weeksLeft * maxPerWeek;
+  // Apply display sort (defaults to points desc) without disturbing true rank
+  const dblPctOf = d => d.dblTotal > 0 ? (d.dblCorrect / d.dblTotal) : -1;
+  const seasonData = [...seasonDataRaw];
+  switch (standingsSort.col) {
+    case 'rank': seasonData.sort((a, b) => standingsSort.dir * (a.rank - b.rank)); break;
+    case 'name': seasonData.sort((a, b) => standingsSort.dir * a.name.localeCompare(b.name)); break;
+    case 'upset': seasonData.sort((a, b) => standingsSort.dir * (a.upsetPct - b.upsetPct)); break;
+    case '2pt': seasonData.sort((a, b) => standingsSort.dir * (dblPctOf(a) - dblPctOf(b))); break;
+    case 'wins': seasonData.sort((a, b) => standingsSort.dir * (a.wins - b.wins)); break;
+    case 'losses': seasonData.sort((a, b) => standingsSort.dir * (a.losses - b.losses)); break;
+    default: seasonData.sort((a, b) => standingsSort.dir * (a.pts - b.pts));
+  }
 
-  document.getElementById('standings-body').innerHTML = seasonData.map((d, i) => {
-    const rankClass = ['rank-1','rank-2','rank-3'][i] || 'rank-other';
-    const currentRank = i + 1;
+  renderStandingsHeader();
+
+  document.getElementById('standings-body').innerHTML = seasonData.map((d) => {
+    const rankClass = d.rank <= 3 ? ['rank-1','rank-2','rank-3'][d.rank - 1] : 'rank-other';
+    const currentRank = d.rank;
     const prevRank = prevRankMap[d.name] || currentRank;
     const diff = prevRank - currentRank;
     let moveHtml = diff > 0
@@ -1201,72 +1359,68 @@ function renderStandings() {
       : diff < 0 ? `<span class="move-down">▼${Math.abs(diff)}</span>`
       : `<span class="move-same">—</span>`;
 
-    // Streak
-    const streakColor = d.streakType === 'W' ? 'var(--green)' : 'var(--red)';
-    const streakEmoji = d.streak >= 3 ? (d.streakType === 'W' ? ' 🔥' : ' 🥶') : '';
-    const streakHtml = `<span class="stat-pill" style="color:${streakColor}">${d.streakType}${d.streak}${streakEmoji}</span>`;
-
-    // 2PT record
-    const dblHtml = `<span class="stat-pill" style="color:var(--muted)">2PT: <span style="color:var(--accent)">${d.dblCorrect}/${d.dblTotal}</span></span>`;
-
-    // Last 5 dots
-    const dotsHtml = `<span class="last5-wrap">${d.last5.map(r =>
-      `<span class="l5-dot" style="background:${r === 'W' ? 'var(--green)' : 'var(--red)'}"></span>`
-    ).join('')}</span>`;
-
-    // Mini sparkline — rank position per week (higher on chart = better rank)
-    const rankByWeek = [];
-    for (let w = 1; w <= WEEKS; w++) {
-      if (!hasResults(w)) continue;
-      const weekPts = participants.map(p => ({ name: p, s: weekScore(w, p) }));
-      // cumulative pts up to this week
-      const cumPts = participants.map(p => ({
-        name: p,
-        s: Array.from({length: w}, (_, wi) => results[wi+1] ? weekScore(wi+1, p) : 0).reduce((a,b) => a+b, 0)
-      })).sort((a, b) => b.s - a.s);
-      const r = cumPts.findIndex(x => x.name === d.name) + 1;
-      rankByWeek.push(r);
-    }
-    const totalParticipants = participants.length;
-    const sw = 60, sh = 20;
-    const sparkPoints = rankByWeek.map((r, idx) => {
-      const x = rankByWeek.length === 1 ? sw/2 : (idx / (rankByWeek.length - 1)) * sw;
-      // invert: rank 1 = top, rank N = bottom
-      const y = sh - ((totalParticipants - r) / (totalParticipants - 1)) * (sh - 4) - 2;
-      return { x, y };
-    });
-    const pts_svg = sparkPoints.map(p => `${p.x},${p.y}`).join(' ');
-    const sparkColor = rankByWeek.length > 1 && rankByWeek[rankByWeek.length-1] < rankByWeek[0] ? 'var(--green)' : rankByWeek.length > 1 && rankByWeek[rankByWeek.length-1] > rankByWeek[0] ? 'var(--red)' : 'var(--accent)';
-    const sparkHtml = `<svg width="${sw}" height="${sh}" style="vertical-align:middle">
-      <polyline points="${pts_svg}" fill="none" stroke="${sparkColor}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      ${sparkPoints.map(p => `<circle cx="${p.x}" cy="${p.y}" r="2" fill="${sparkColor}"/>`).join('')}
-    </svg>`;
+    // Upset %
+    const upsetHtml = `${d.upsetPct}% <span style="opacity:0.6;font-size:10px">(${d.underdogCorrect}/${d.underdogWins})</span>`;
+    const dblCellHtml = `${d.dblCorrect}/${d.dblTotal}`;
+    const statusHtml = d.rank === 1
+      ? `<div style="font-size:9px;font-weight:700;color:var(--gold);margin-top:2px">LEADER</div>`
+      : `<div style="font-size:9px;font-weight:700;color:var(--red);margin-top:2px">-${leader - d.pts}</div>`;
 
     return `<tr>
       <td class="rank-cell ${rankClass}">${currentRank}</td>
-      <td class="name-cell" style="min-width:0;width:100%">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-          <span style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-            <span class="name-link" onclick="openPlayer('${d.name}')">${d.name}</span>
-            ${moveHtml}
-          </span>
-          <span style="display:flex;align-items:center;gap:16px;flex:1;justify-content:center">
-            ${sparkHtml}
-            ${dblHtml}
-            ${i === 0 ? '<span class="stat-pill" style="color:var(--gold)">Leader</span>' : '<span class="stat-pill" style="color:var(--red)">-' + (leader - d.pts) + ' pts</span>'}
-          </span>
-        </div>
+      <td class="name-cell">
+        <span class="name-link" onclick="openPlayer('${escName(d.name)}')">${d.name}</span> ${moveHtml}
       </td>
+      <td style="text-align:center;font-size:12px;color:var(--muted)">${upsetHtml}</td>
+      <td style="text-align:center;font-size:12px;color:var(--muted)">${dblCellHtml}</td>
       <td class="wl-cell"><span class="wins">${d.wins}</span></td>
       <td class="wl-cell"><span class="losses">${d.losses}</span></td>
-      <td class="pts-cell">${d.pts}</td>
+      <td class="pts-cell">${d.pts}${statusHtml}</td>
     </tr>`;
   }).join('');
 }
 
+let standingsSort = { col: 'pts', dir: -1 };
+
+function sortStandingsByCol(col) {
+  if (standingsSort.col === col) {
+    standingsSort.dir *= -1;
+  } else {
+    standingsSort.col = col;
+    standingsSort.dir = (col === 'name') ? 1 : -1;
+  }
+  renderStandings();
+}
+
+function renderStandingsHeader() {
+  const cols = [
+    { key: 'rank', label: '#', align: 'left', width: '36px' },
+    { key: 'name', label: 'Name', align: 'left' },
+    { key: 'upset', label: 'Upset%', align: 'center' },
+    { key: '2pt', label: '2PT', align: 'center' },
+    { key: 'wins', label: 'W', align: 'right' },
+    { key: 'losses', label: 'L', align: 'right' },
+    { key: 'pts', label: 'PTS', align: 'right' },
+  ];
+  const theadRow = document.getElementById('standings-thead-row');
+  if (!theadRow) return;
+  theadRow.innerHTML = cols.map(c => {
+    const isActive = standingsSort.col === c.key;
+    const arrow = isActive ? (standingsSort.dir === 1 ? ' ▲' : ' ▼') : '';
+    const style = 'cursor:pointer;user-select:none;' + (c.width ? `width:${c.width};` : '') + `text-align:${c.align};` + (isActive ? 'color:var(--accent)' : '');
+    return `<th style="${style}" onclick="sortStandingsByCol('${c.key}')">${c.label}${arrow}</th>`;
+  }).join('');
+}
+
+function weekHasContent(w) {
+  const g = sheetGames[w] || sheetGames[String(w)];
+  if (!g || !g.length) return false;
+  return g.some(pair => pair && pair[0] && pair[1]);
+}
+
 function buildWeekPills(containerId, activeWeek, callback) {
   document.getElementById(containerId).innerHTML =
-    Array.from({length: WEEKS}, (_, i) => i + 1).map(w =>
+    Array.from({length: WEEKS}, (_, i) => i + 1).filter(w => weekHasContent(w)).map(w =>
       `<div class="week-pill ${w === activeWeek ? 'active' : ''}" onclick="${callback}(${w})">${hasResults(w) ? '✓ ' : ''}Wk ${w}</div>`
     ).join('');
 }
@@ -1299,12 +1453,14 @@ function renderPicksTable(week) {
   // Compute winner info up front so sort can use it
   const winnerInfo = res ? weekWinner(week) : null;
   const maxScore = res ? Math.max(...participants.map(p => weekScore(week, p))) : null;
-  const tiedCount = res ? participants.filter(p => weekScore(week, p) === maxScore).length : 0;
-  const hasTie = tiedCount > 1;
+  const tiedForLead = res ? participants.filter(p => weekScore(week, p) === maxScore) : [];
+  const wasTiebreak = !!(winnerInfo && winnerInfo.tiebreak); // true only if a tie actually needed resolving
 
-  // Sort participants
+  // Sort participants — only Name or Points supported
   let sorted;
-  if (picksSort.col === null) {
+  if (picksSort.col === 'name') {
+    sorted = [...participants].sort((a, b) => picksSort.dir * a.localeCompare(b));
+  } else {
     const winner = winnerInfo?.winner;
     sorted = [...participants].sort((a, b) => {
       const sa = weekScore(week, a);
@@ -1318,47 +1474,24 @@ function renderPicksTable(week) {
       const db = tbDiff(week, b) ?? 999;
       return da - db;
     });
-  } else if (picksSort.col === 'name') {
-    sorted = [...participants].sort((a, b) => picksSort.dir * a.localeCompare(b));
-  } else if (picksSort.col === 'tb') {
-    sorted = [...participants].sort((a, b) => {
-      const ga = tbGuesses[week]?.[a] ?? 999;
-      const gb = tbGuesses[week]?.[b] ?? 999;
-      return picksSort.dir * (ga - gb);
-    });
-  } else {
-    sorted = [...participants].sort((a, b) => {
-      const wg2 = sheetGames[week] || sheetGames[String(week)] || games;
-      const nameA = wg2[picksSort.col][picks[week][a][picksSort.col]];
-      const nameB = wg2[picksSort.col][picks[week][b][picksSort.col]];
-      return picksSort.dir * nameA.localeCompare(nameB);
-    });
   }
 
   const weekGamesForPicks = sheetGames[week] || sheetGames[String(week)] || games;
   const headers = weekGamesForPicks.map((g, gi) => {
     const isDbl = DOUBLE_GAMES.includes(gi);
-    const isActive = picksSort.col === gi;
-    const arrow = isActive ? (picksSort.dir === 1 ? ' ▲' : ' ▼') : '';
-    const activeStyle = isActive ? 'color:var(--accent);cursor:pointer' : 'cursor:pointer';
     const isNtl852 = weekNeutralGames.includes(gi);
     const sep852 = isNtl852 ? `<span style="font-size:9px;opacity:0.4">vs</span>` : `<span style="font-size:9px;opacity:0.4">@</span>`;
-    return `<th style="${activeStyle}" onclick="sortPicksByCol(${week}, ${gi})">${g[0].slice(0,4).toUpperCase()}<br>${sep852}<br>${g[1].slice(0,4).toUpperCase()}${isDbl ? `<span class="dbl">2PT</span>` : ''}${isNtl852 ? `<span style="display:block;font-size:8px;color:var(--muted)">(N)</span>` : ''}${arrow ? `<span style="font-size:9px">${arrow}</span>` : ''}</th>`;
+    return `<th>${teamAbbr(g[0])}<br>${sep852}<br>${teamAbbr(g[1])}${isDbl ? `<span class="dbl">2PT</span>` : ''}${isNtl852 ? `<span style="display:block;font-size:8px;color:var(--muted)">(N)</span>` : ''}</th>`;
   });
 
   // Tiebreaker header
   const tbActualVal = tbActual[week];
-  const tbActualDisplay = tbActualVal ? ('<br><span style="font-size:9px;color:#34d399">ACT:' + tbActualVal + '</span>') : '';
-  const tbTieDisplay = hasTie ? '<br><span style="font-size:8px;color:#f87171">TIE!</span>' : '';
-  const tbColColor = picksSort.col === 'tb' ? 'color:var(--accent)' : 'color:var(--gold)';
-  const tbOnclick = 'sortPicksByCol(' + week + ', \x22tb\x22)';
-  const tbHeader = '<th style="border-left:2px solid var(--border);cursor:pointer;' + tbColColor + '" onclick="' + tbOnclick + '">' +
-    'TB<br><span style="font-size:8px;opacity:0.7">GUESS</span>' + tbActualDisplay + tbTieDisplay + '</th>';
+  const tbActualDisplay = tbActualVal ? ` <span style="color:#34d399">${tbActualVal}</span>` : '';
+  const tbHeader = `<th style="border-left:2px solid var(--border);color:var(--gold);font-size:11px">TB${tbActualDisplay}</th>`;
 
   const rows = sorted.map(p => {
     const s = res ? weekScore(week, p) : '—';
     const isWinner = res && winnerInfo && p === winnerInfo.winner;
-    const isMaxScore = res && weekScore(week, p) === maxScore;
 
     const cells = weekGamesForPicks.map((g, gi) => {
       if (!isGameRevealed(week, gi)) {
@@ -1372,13 +1505,11 @@ function renderPicksTable(week) {
       return `<td>${teamBadge(teamName, status)}</td>`;
     }).join('');
 
-    // Tiebreaker cell
+    // Tiebreaker cell — colored only when a tiebreak actually happened, and only for the players who were tied
     const guess = (picksRevealed[week] || []).some(Boolean) ? tbGuesses[week]?.[p] : null;
-    const diff = res && tbActualVal ? tbDiff(week, p) : null;
-    const tbColor = isMaxScore && hasTie ? (isWinner ? 'var(--green)' : 'var(--red)') : 'var(--muted)';
-    const tbCell = `<td style="border-left:2px solid var(--border);font-family:Bebas Neue,sans-serif;font-size:16px;color:${tbColor};text-align:center">
-      ${guess ?? '—'}${diff !== null && isMaxScore && hasTie ? `<br><span style="font-size:9px">(±${diff})</span>` : ''}
-    </td>`;
+    const inTiebreak = wasTiebreak && tiedForLead.includes(p);
+    const tbColor = inTiebreak ? (isWinner ? 'var(--green)' : 'var(--red)') : 'var(--text)';
+    const tbCell = `<td style="border-left:2px solid var(--border);font-family:'Bebas Neue',sans-serif;font-size:16px;color:${tbColor};text-align:center">${guess ?? '—'}</td>`;
 
     const rowBg = isWinner ? 'rgba(56,189,248,0.05)' : '';
     return `<tr style="height:52px;background:${rowBg}">
@@ -1389,7 +1520,7 @@ function renderPicksTable(week) {
   }).join('');
 
   // Consensus row - most popular pick for each game
-  const consensusCells = games.map((g, gi) => {
+  const consensusCells = weekGamesForPicks.map((g, gi) => {
     const favCount = participants.filter(p => picks[week][p][gi] === 0).length;
     const dogCount = participants.length - favCount;
     const majorityPick = favCount >= dogCount ? 0 : 1;
@@ -1411,7 +1542,7 @@ function renderPicksTable(week) {
   const nameRows = sorted.map(p => {
     const isWinner = res && winnerInfo && p === winnerInfo.winner;
     const bg = isWinner ? 'rgba(56,189,248,0.08)' : 'var(--surface)';
-    return `<tr style="height:52px"><td style="padding:8px 10px;font-weight:600;font-size:13px;white-space:nowrap;background:${bg};border-bottom:1px solid var(--border)">${p}${isWinner ? ' 🏆' : ''}</td></tr>`;
+    return `<tr style="height:52px"><td style="padding:8px 10px;font-weight:600;font-size:13px;white-space:nowrap;background:${bg};border-bottom:1px solid var(--border)"><span class="name-link" onclick="openPlayer('${escName(p)}')">${p}</span>${isWinner ? ' 🏆' : ''}</td></tr>`;
   }).join('');
   const nameConsensusRow = `<tr style="height:52px;border-top:2px solid var(--border)"><td style="padding:8px 10px;color:var(--muted);font-size:11px;font-weight:700;letter-spacing:0.5px;background:var(--surface2);border-bottom:1px solid var(--border)">CONSENSUS</td></tr>`;
 
@@ -1428,7 +1559,7 @@ function renderPicksTable(week) {
         </table>
       </div>
       <div style="overflow-x:auto;flex:1;min-width:0">
-        <table id="picks-table" style="border-collapse:collapse;font-size:12px;min-width:${games.length * 56}px">
+        <table id="picks-table" class="picks-grid" style="border-collapse:collapse;font-size:12px;min-width:${games.length * 56}px">
           <thead><tr>
             ${headers.join('')}
             ${tbHeader}
@@ -1475,11 +1606,16 @@ function renderDistribution(week) {
 
     const winnerLabel = res ? (favWon ? '✓ ' : '') : '';
     const loserLabel  = res ? (dogWon  ? '✓ ' : '') : '';
+    const favTeamMarked = '<span style="border-bottom:2px solid var(--gold);padding-bottom:1px">' + favTeam + '</span>';
+    const isUpset = res && dogWon;
 
     return '<div class="dist-game">' +
       '<div class="dist-game-title">' +
-        '<span>Game ' + (gi+1) + ': ' + favTeam + ' vs ' + dogTeam + '</span>' +
-        (isDbl ? '<span class="dist-double-badge">2 PTS</span>' : '') +
+        '<span>Game ' + (gi+1) + ': ' + favTeamMarked + ' vs ' + dogTeam + '</span>' +
+        '<span style="display:flex;gap:6px">' +
+          (isDbl ? '<span class="dist-double-badge">2 PTS</span>' : '') +
+          (isUpset ? '<span style="background:var(--red);color:#1a0505;font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;letter-spacing:.5px">⚡ UPSET</span>' : '') +
+        '</span>' +
       '</div>' +
       '<div class="dist-split-row">' +
         '<div class="dist-split-team fav-side">' +
@@ -1510,12 +1646,12 @@ function renderCharts() {
   const completedWeeksAll = Array.from({length: WEEKS}, (_, i) => i + 1).filter(w => hasResults(w));
   const consensusAccuracy = completedWeeksAll.map(w => {
     let correct = 0, total = 0;
-    games.forEach((g, gi) => {
+    for (let gi = 0; gi < 13; gi++) {
       participants.forEach(p => {
         if (picks[w][p][gi] === results[w][gi]) correct++;
         total++;
       });
-    });
+    }
     return total > 0 ? Math.round((correct / total) * 100) : 0;
   });
 
@@ -1560,7 +1696,7 @@ function renderCharts() {
           '<div class="pure-bar-label">Wk ' + completedWeeksAll[i] + '</div>' +
         '</div>';
       }).join('') +
-      '<div class="pure-avg-line" style="bottom:' + Math.round((avg/maxScore)*100) + '%"><span style="position:absolute;right:2px;top:-14px;font-size:9px;color:rgba(251,191,36,0.8);white-space:nowrap">avg ' + avg.toFixed(1) + '</span></div>' +
+      '<div class="pure-avg-line" style="bottom:' + Math.round((avg/maxScore)*100) + '%;left:0;right:auto;width:' + (scores.length * 36 - 4) + 'px"><span style="position:absolute;right:2px;top:-14px;font-size:9px;color:rgba(251,191,36,0.8);white-space:nowrap">avg ' + avg.toFixed(1) + '</span></div>' +
     '</div>';
     document.getElementById('chart-ppw').innerHTML = html;
   };
@@ -1573,182 +1709,12 @@ function renderCharts() {
     '<thead><tr><th>Week</th><th>Winner</th><th style="text-align:right">Score</th></tr></thead><tbody>' +
     Object.entries(weeklyWinners).map(function(e) {
       var w = e[0], d = e[1];
-      return '<tr><td style="color:var(--muted)">Week ' + w + '</td><td style="font-weight:600">' + d.name + ' 🏆</td><td class="pts-cell">' + d.score + '</td></tr>';
+      return '<tr><td style="color:var(--muted)">Week ' + w + '</td><td style="font-weight:600"><span class="name-link" onclick="openPlayer(\'' + escName(d.name) + '\')">' + d.name + '</span> 🏆</td><td class="pts-cell">' + d.score + '</td></tr>';
     }).join('') + '</tbody>';
 
-  // Bump Chart
-  var completedWeeks = [];
-  for (var wi = 1; wi <= WEEKS; wi++) { if (results[wi]) completedWeeks.push(wi); }
-  var n = participants.length;
-
-  // High-contrast color palette that cycles and stays distinct
-  var CONTRAST_COLORS = [
-    '#38bdf8','#34d399','#f87171','#fbbf24','#a78bfa',
-    '#f472b6','#fb923c','#4ade80','#60a5fa','#e879f9',
-    '#facc15','#2dd4bf','#f97316','#818cf8','#86efac',
-    '#ff6b6b','#4ecdc4','#45b7d1','#96ceb4','#ffad60'
-  ];
-
-  function pickColor(i) {
-    return CONTRAST_COLORS[i % CONTRAST_COLORS.length];
-  }
-
-  var rankData = {};
-  participants.forEach(function(p) { rankData[p] = []; });
-
-  completedWeeks.forEach(function(w) {
-    var cumPts = participants.map(function(p) {
-      var pts = completedWeeks.filter(function(ww) { return ww <= w; }).reduce(function(s, ww) { return s + weekScore(ww, p); }, 0);
-      return { name: p, pts: pts };
-    }).sort(function(a, b) { return b.pts - a.pts; });
-    cumPts.forEach(function(d, i) { rankData[d.name].push(i + 1); });
-  });
-
-  var weekLabels = completedWeeks.map(function(w) { return 'Week ' + w; });
-  var datasets = participants.map(function(p, i) {
-    return {
-      label: p,
-      data: rankData[p],
-      borderColor: pickColor(i),
-      backgroundColor: pickColor(i),
-      borderWidth: 1.5,
-      pointRadius: 3,
-      pointHoverRadius: 3,
-      tension: 0.3,
-      fill: false
-    };
-  });
-
-  window.bumpFilter = 'top15';
-  window.customBumpSelected = {};
-
-  // Build checklist
-  var checklist = document.getElementById('bump-checklist');
-  var _sd = computeSeasonData();
-  checklist.innerHTML = participants.map(function(p) {
-    var rank = _sd.findIndex(function(d) { return d.name === p; }) + 1;
-    var esc = p.replace(/'/g, "\'");
-    return '<label class="bump-check-item"><input type="checkbox" onchange="updateCustomSelection(\'' + esc + '\',this.checked)"> <span>#' + rank + ' ' + p + '</span></label>';
-  }).join('');
-
-  renderBumpChart('top15');
-}
-
-window.updateCustomSelection = function(name, checked) {
-  if (!window.customBumpSelected) window.customBumpSelected = {};
-  window.customBumpSelected[name] = checked;
-  renderBumpChart('custom');
-};
-
-window.closeBumpChecklist = function() {
-  document.getElementById('bump-checklist-wrap').style.display = 'none';
-  renderBumpChart('custom');
-};
-window.setBumpFilter = function(filter, btn) {
-  window.bumpFilter = filter;
-  document.querySelectorAll('.bump-btn').forEach(function(b) { b.classList.remove('active'); });
-  if (btn) btn.classList.add('active');
-  var wrap = document.getElementById('bump-checklist-wrap');
-  if (filter === 'custom') {
-    wrap.style.display = 'block';
-  } else {
-    wrap.style.display = 'none';
-  }
-  renderBumpChart(filter);
-};
-
-function renderBumpChart(filter) {
-  var container = document.getElementById('chart-bump');
-  if (!container) return;
-
-  var COLORS = ['#38bdf8','#34d399','#f87171','#fbbf24','#a78bfa',
-    '#f472b6','#fb923c','#4ade80','#60a5fa','#e879f9',
-    '#facc15','#2dd4bf','#f97316','#818cf8','#86efac',
-    '#ff6b6b','#4ecdc4','#45b7d1','#96ceb4','#ffad60'];
-
-  var completedWeeks = [];
-  for (var w = 1; w <= WEEKS; w++) { if (hasResults(w)) completedWeeks.push(w); }
-  var W = completedWeeks.length;
-  if (W === 0) { container.innerHTML = '<div style="color:var(--muted);padding:20px;text-align:center">No completed weeks yet</div>'; return; }
-
-  // Build cumulative points per week per participant
-  var cumPts = {};
-  participants.forEach(function(p) { cumPts[p] = []; });
-  completedWeeks.forEach(function(w) {
-    participants.forEach(function(p) {
-      var prev = cumPts[p].length ? cumPts[p][cumPts[p].length - 1] : 0;
-      cumPts[p].push(prev + weekScore(w, p));
-    });
-  });
-
-  // Rank at each week
-  var rankAtWeek = {};
-  participants.forEach(function(p) { rankAtWeek[p] = []; });
-  for (var wi = 0; wi < W; wi++) {
-    var sorted = participants.slice().sort(function(a, b) { return cumPts[b][wi] - cumPts[a][wi]; });
-    sorted.forEach(function(p, ri) { rankAtWeek[p].push(ri + 1); });
-  }
-
-  // Final ranks
-  var finalRank = {};
-  participants.forEach(function(p) { finalRank[p] = rankAtWeek[p][W - 1] || 99; });
-  var sortedByFinal = participants.slice().sort(function(a, b) { return finalRank[a] - finalRank[b]; });
-
-  // Select which to show
-  var selected;
-  if (filter === 'top15') selected = sortedByFinal.slice(0, 15);
-  else if (filter === '16-30') selected = sortedByFinal.slice(15, 30);
-  else if (filter === '31-45') selected = sortedByFinal.slice(30, 45);
-  else if (filter === '46plus') selected = sortedByFinal.slice(45);
-  else {
-    selected = sortedByFinal.filter(function(p) { return window.customBumpSelected && window.customBumpSelected[p]; });
-  }
-  if (!selected.length) {
-    container.innerHTML = '<div style="color:var(--muted);padding:20px;text-align:center">Select participants to display</div>';
-    return;
-  }
-
-  var N = participants.length;
-  var svgW = 300, svgH = 460, padL = 24, padR = 100, padT = 14, padB = 22;
-  var cW = svgW - padL - padR;
-  var cH = svgH - padT - padB;
-  var xStep = W > 1 ? cW / (W - 1) : cW;
-  var yStep = cH / Math.max(N - 1, 1);
-
-  function xp(wi) { return padL + wi * xStep; }
-  function yp(rank) { return padT + (rank - 1) * yStep; }
-
-  var grid = '';
-  for (var r = 1; r <= N; r += 5) {
-    var y = yp(r);
-    grid += '<line x1="' + padL + '" y1="' + y + '" x2="' + (svgW - padR) + '" y2="' + y + '" stroke="#2e4060" stroke-width="0.5"/>';
-    grid += '<text x="' + (padL - 3) + '" y="' + (y + 3) + '" fill="#64748b" font-size="8" text-anchor="end">#' + r + '</text>';
-  }
-  completedWeeks.forEach(function(w, wi) {
-    grid += '<text x="' + xp(wi) + '" y="' + (svgH - 4) + '" fill="#64748b" font-size="8" text-anchor="middle">Wk' + w + '</text>';
-  });
-
-  var paths = '', dots = '', labels = '';
-  selected.forEach(function(p, ci) {
-    var color = COLORS[ci % COLORS.length];
-    var ranks = rankAtWeek[p];
-    var d = '';
-    for (var wi = 0; wi < W; wi++) {
-      var x = xp(wi), y = yp(ranks[wi]);
-      if (wi === 0) { d += 'M' + x.toFixed(1) + ',' + y.toFixed(1); }
-      else {
-        var px = xp(wi - 1), py = yp(ranks[wi - 1]);
-        var cx = ((px + x) / 2).toFixed(1);
-        d += ' C' + cx + ',' + py.toFixed(1) + ' ' + cx + ',' + y.toFixed(1) + ' ' + x.toFixed(1) + ',' + y.toFixed(1);
-      }
-      dots += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="2.5" fill="' + color + '"/>';
-    }
-    paths += '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="1.8" opacity="0.9"/>';
-    var lastRank = ranks[W - 1];
-    labels += '<text x="' + (svgW - padR + 5) + '" y="' + (yp(lastRank) + 3) + '" fill="' + color + '" font-size="9">' + p + '</text>';
-  });
-
-  container.innerHTML = '<svg viewBox="0 0 ' + svgW + ' ' + svgH + '" width="100%" style="display:block;overflow:visible">' + grid + paths + dots + labels + '</svg>';
+  loadRankTrendSelected();
+  renderRankTrendChips();
+  renderRankTrendChart();
 }
 
 let lastPage = 'standings';
@@ -2189,32 +2155,67 @@ window.renamePlayer = function(id) {
 
 // ─── Hall of Records ─────────────────────────────────────────────────────────
 
+// Normalizes one season's raw sheet data into the shape renderRecords() expects
+function buildSeasonRecordData(rawData) {
+  let participantsList = [];
+  if (rawData.playerIndex && rawData.playerIds) {
+    participantsList = rawData.playerIds.map(id => rawData.playerIndex[id]).filter(Boolean);
+  } else if (rawData.participants) {
+    participantsList = rawData.participants;
+  }
+  const normPicks = {};
+  if (rawData.picks) {
+    Object.keys(rawData.picks).forEach(w => {
+      normPicks[String(w)] = {};
+      Object.keys(rawData.picks[w]).forEach(p => {
+        normPicks[String(w)][p] = (rawData.picks[w][p] || []).slice(0, 13);
+      });
+    });
+  }
+  const normResults = {};
+  if (rawData.results) Object.keys(rawData.results).forEach(w => { normResults[String(w)] = rawData.results[w]; });
+  const normPlayerDoubles = {};
+  if (rawData.playerDoubles) Object.keys(rawData.playerDoubles).forEach(w => { normPlayerDoubles[String(w)] = rawData.playerDoubles[w]; });
+  return {
+    participants: participantsList,
+    picks: normPicks,
+    results: normResults,
+    doubleGames: rawData.doubleGames || {},
+    playerDoubles: normPlayerDoubles
+  };
+}
+
 function showRecords() {
   const loading = document.getElementById('records-loading');
   const content = document.getElementById('records-content');
   if (!loading || !content) return;
-  loading.style.display = 'none';
-  content.style.display = 'block';
-  // Use already-loaded in-memory data instead of re-fetching
+  loading.style.display = 'block';
+  content.style.display = 'none';
+
+  const seasonsToLoad = availableSeasons.length ? availableSeasons : [activeSeason];
   const allData = {};
-  // Normalize picks/results/playerDoubles to string keys for renderRecords
-  const normalizedPicks = {};
-  Object.keys(picks).forEach(k => { normalizedPicks[String(k)] = picks[k]; });
-  const normalizedResults = {};
-  Object.keys(results).forEach(k => { normalizedResults[String(k)] = results[k]; });
-  const normalizedPlayerDoubles = {};
-  Object.keys(playerDoubles).forEach(k => { normalizedPlayerDoubles[String(k)] = playerDoubles[k]; });
-  allData[activeSeason] = {
-    participants,
-    picks: normalizedPicks,
-    results: normalizedResults,
-    doubleGames: sheetDoubleGames,
-    playerDoubles: normalizedPlayerDoubles,
-    favorites: sheetFavorites,
-    games: sheetGames,
-    tbActual
-  };
-  renderRecords(allData);
+  let remaining = seasonsToLoad.length;
+
+  function finish() {
+    loading.style.display = 'none';
+    content.style.display = 'block';
+    renderRecords(allData);
+  }
+
+  seasonsToLoad.forEach(season => {
+    if (season === activeSeason) {
+      // Already loaded in memory for the season currently being viewed — no need to refetch
+      allData[season] = buildSeasonRecordData({ participants, picks, results, doubleGames: sheetDoubleGames, playerDoubles });
+      remaining--;
+      if (remaining === 0) finish();
+      return;
+    }
+    apiCall({ action: 'read', season }, function(data) {
+      if (data) allData[season] = buildSeasonRecordData(data);
+      remaining--;
+      if (remaining === 0) finish();
+    });
+  });
 }
 
 function isPerfectWeek(playerPicks, weekResults) {
@@ -2319,7 +2320,7 @@ function renderRecords(allData) {
     const bg = i === 0 ? 'background:rgba(255,215,0,0.07)' : i%2===0 ? 'background:var(--surface)' : '';
     return '<tr style="border-bottom:1px solid var(--border);' + bg + '">' +
       '<td style="padding:10px 8px;color:var(--muted);font-size:12px">' + (i+1) + '</td>' +
-      '<td style="padding:10px 8px;font-weight:700;font-size:14px;white-space:nowrap">' + p + '</td>' +
+      '<td style="padding:10px 8px;font-weight:700;font-size:14px;white-space:nowrap"><span class="name-link" onclick="openPlayer(\'' + escName(p) + '\')">' + p + '</span></td>' +
       '<td style="padding:10px 8px;text-align:center;color:var(--muted)">' + s.seasons + '</td>' +
       '<td style="padding:10px 8px;text-align:center;white-space:nowrap"><span style="color:var(--green)">' + s.totalW + '</span><span style="color:var(--muted)">-</span><span style="color:var(--red)">' + s.totalL + '</span></td>' +
       '<td style="padding:10px 8px;text-align:center">' + titleStr + '</td>' +
@@ -2355,7 +2356,7 @@ function renderRecords(allData) {
     '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px">' +
       '<div style="font-size:24px;margin-bottom:6px">' + r.icon + '</div>' +
       '<div style="font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">' + r.label + '</div>' +
-      '<div style="font-size:15px;font-weight:700;color:' + r.color + ';margin-bottom:4px">' + r.holders.join(', ') + '</div>' +
+      '<div style="font-size:15px;font-weight:700;color:' + r.color + ';margin-bottom:4px">' + r.holders.map(h => `<span class="name-link" onclick="openPlayer('${escName(h)}')">${h}</span>`).join(', ') + '</div>' +
       '<div style="font-size:22px;font-weight:700;color:var(--text)">' + r.value + '</div>' +
     '</div>'
   ).join('');
@@ -2499,8 +2500,63 @@ window.startNewSeason = function() {
 };
 
 
+// ─── DEMO DATA (temporary — for reviewing tab layouts with realistic data) ──
+const DEMO_MODE = false;
+
+function generateDemoData() {
+  const demoNames = ['Mike Johnson','Sarah Chen','Big Tony','Ashley Ramirez','Dave "The Lock" Wilson','Priya Patel','Jordan Lee','Cody Baker','Fantasy Frank','Nicole Turner'];
+  participants.length = 0;
+  playerIds.length = 0;
+  Object.keys(playerIndex).forEach(k => delete playerIndex[k]);
+  demoNames.forEach((name, i) => {
+    const id = 'p' + String(i + 1).padStart(3, '0');
+    playerIndex[id] = name;
+    playerIds.push(id);
+    participants.push(name);
+  });
+
+  const teamPool = Object.keys(FBS_TEAMS);
+  const DEMO_WEEKS = 6;
+
+  for (let w = 1; w <= DEMO_WEEKS; w++) {
+    const shuffled = [...teamPool].sort(() => Math.random() - 0.5);
+    const weekGames = [];
+    for (let gi = 0; gi < 13; gi++) weekGames.push([shuffled[gi * 2], shuffled[gi * 2 + 1]]);
+    sheetGames[w] = weekGames;
+
+    const favs = Array.from({ length: 13 }, () => (Math.random() < 0.5 ? 0 : 1));
+    sheetFavorites[w] = favs;
+
+    const dbls = [];
+    while (dbls.length < 3) {
+      const gi = Math.floor(Math.random() * 13);
+      if (!dbls.includes(gi)) dbls.push(gi);
+    }
+    sheetDoubleGames[w] = dbls;
+    sheetNeutralGames[w] = [];
+
+    // Favorites win ~65% of the time
+    results[w] = favs.map(fav => (Math.random() < 0.65 ? fav : 1 - fav));
+
+    picks[w] = {};
+    playerDoubles[w] = {};
+    tbGuesses[w] = {};
+    participants.forEach((p, pi) => {
+      const skill = 0.55 + (pi % 5) * 0.04; // slight skill variance so standings aren't flat
+      picks[w][p] = favs.map(fav => (Math.random() < skill ? fav : 1 - fav));
+      playerDoubles[w][p] = dbls.slice();
+      tbGuesses[w][p] = 35 + Math.floor(Math.random() * 30);
+    });
+    tbActual[w] = 35 + Math.floor(Math.random() * 30);
+    picksRevealed[w] = Array(13).fill(true);
+  }
+}
+
 // Start: load from Google Sheets then init
-if (SCRIPT_URL !== '__SCRIPT_URL__') {
+if (DEMO_MODE) {
+  generateDemoData();
+  initApp();
+} else if (SCRIPT_URL !== '__SCRIPT_URL__') {
   loadFromSheet();
 } else {
   initApp();
