@@ -155,7 +155,8 @@
     <div class="stat-card"><div class="stat-value" id="stat-weeks">—</div><div class="stat-label">WEEKS COMPLETE</div></div>
     <div class="stat-card"><div class="stat-value" id="stat-participants">—</div><div class="stat-label">PARTICIPANTS</div></div>
   </div>
-  <table class="standings-table">
+  <div style="overflow-x:auto">
+  <table class="standings-table" style="min-width:600px">
     <thead><tr id="standings-thead-row">
       <th style="width:36px">#</th>
       <th>Name</th>
@@ -167,6 +168,7 @@
     </tr></thead>
     <tbody id="standings-body"></tbody>
   </table>
+  </div>
 </div>
 
 <div class="page" id="page-picks">
@@ -1286,7 +1288,10 @@ function computeSeasonData() {
     for (let i = weekResults.length - 1; i >= 0; i--) { if (weekResults[i] === streakType) streak++; else break; }
     const upsetPct = underdogWins > 0 ? Math.round((underdogCorrect / underdogWins) * 100) : 0;
     return { name: p, pts, wins, losses, dblCorrect, dblTotal, weekScores, streak, streakType, last5: weekResults.slice(-5), underdogWins, underdogCorrect, upsetPct };
-  }).sort((a, b) => b.pts - a.pts);
+  }).sort((a, b) => {
+    if (b.pts !== a.pts) return b.pts - a.pts;
+    return b.upsetPct - a.upsetPct; // season tiebreaker per Rules & About
+  });
 }
 function computeWeeklyWinners() {
   const ww = {};
@@ -1477,8 +1482,9 @@ function renderPicksTable(week) {
   }
 
   const weekGamesForPicks = sheetGames[week] || sheetGames[String(week)] || games;
+  const weekDoubleGames = sheetDoubleGames[week] || sheetDoubleGames[String(week)] || DOUBLE_GAMES;
   const headers = weekGamesForPicks.map((g, gi) => {
-    const isDbl = DOUBLE_GAMES.includes(gi);
+    const isDbl = weekDoubleGames.includes(gi);
     const isNtl852 = weekNeutralGames.includes(gi);
     const sep852 = isNtl852 ? `<span style="font-size:9px;opacity:0.4">vs</span>` : `<span style="font-size:9px;opacity:0.4">@</span>`;
     return `<th>${teamAbbr(g[0])}<br>${sep852}<br>${teamAbbr(g[1])}${isDbl ? `<span class="dbl">2PT</span>` : ''}${isNtl852 ? `<span style="display:block;font-size:8px;color:var(--muted)">(N)</span>` : ''}</th>`;
@@ -1492,6 +1498,8 @@ function renderPicksTable(week) {
   const rows = sorted.map(p => {
     const s = res ? weekScore(week, p) : '—';
     const isWinner = res && winnerInfo && p === winnerInfo.winner;
+
+    const nameCell = `<td class="name-col"${isWinner ? ' style="background:rgba(56,189,248,0.08)"' : ''}><span class="name-link" onclick="openPlayer('${escName(p)}')">${p}</span>${isWinner ? ' 🏆' : ''}</td>`;
 
     const cells = weekGamesForPicks.map((g, gi) => {
       if (!isGameRevealed(week, gi)) {
@@ -1513,6 +1521,7 @@ function renderPicksTable(week) {
 
     const rowBg = isWinner ? 'rgba(56,189,248,0.05)' : '';
     return `<tr style="height:52px;background:${rowBg}">
+      ${nameCell}
       ${cells}
       ${tbCell}
       <td class="pts-col">${s}</td>
@@ -1520,6 +1529,7 @@ function renderPicksTable(week) {
   }).join('');
 
   // Consensus row - most popular pick for each game
+  const consensusNameCell = `<td class="name-col" style="color:var(--muted);font-size:11px;font-weight:700;letter-spacing:0.5px;background:var(--surface2)">CONSENSUS</td>`;
   const consensusCells = weekGamesForPicks.map((g, gi) => {
     const favCount = participants.filter(p => picks[week][p][gi] === 0).length;
     const dogCount = participants.length - favCount;
@@ -1532,43 +1542,27 @@ function renderPicksTable(week) {
 
   const consensusTbCell = '<td style="border-left:2px solid var(--border);background:var(--surface2)"></td>';
   const consensusRow = '<tr style="border-top:2px solid var(--border);background:var(--surface2)">' +
+    consensusNameCell +
     consensusCells +
     consensusTbCell +
     '<td class="pts-col" style="color:var(--muted)">—</td>' +
-    '</tr>';;
+    '</tr>';
 
   const ptsArrow = picksSort.col === null ? ' ▼' : '';
-  // Build name rows for left fixed panel
-  const nameRows = sorted.map(p => {
-    const isWinner = res && winnerInfo && p === winnerInfo.winner;
-    const bg = isWinner ? 'rgba(56,189,248,0.08)' : 'var(--surface)';
-    return `<tr style="height:52px"><td style="padding:8px 10px;font-weight:600;font-size:13px;white-space:nowrap;background:${bg};border-bottom:1px solid var(--border)"><span class="name-link" onclick="openPlayer('${escName(p)}')">${p}</span>${isWinner ? ' 🏆' : ''}</td></tr>`;
-  }).join('');
-  const nameConsensusRow = `<tr style="height:52px;border-top:2px solid var(--border)"><td style="padding:8px 10px;color:var(--muted);font-size:11px;font-weight:700;letter-spacing:0.5px;background:var(--surface2);border-bottom:1px solid var(--border)">CONSENSUS</td></tr>`;
-
   const nameSortArrow = picksSort.col === 'name' ? (picksSort.dir === 1 ? ' ▲' : ' ▼') : '';
   const nameHeaderStyle = picksSort.col === 'name' ? 'color:var(--accent)' : '';
 
-  const _ptTarget = document.getElementById('picks-table-wrap') || document.getElementById('picks-table');
-  _ptTarget.outerHTML = `
-    <div id="picks-table-wrap" style="display:flex;align-items:flex-start;border:1px solid var(--border);border-radius:10px;overflow:hidden">
-      <div style="flex-shrink:0;border-right:2px solid var(--border)">
-        <table style="border-collapse:collapse;font-size:12px">
-          <thead><tr style="height:52px"><th style="padding:8px 10px;background:var(--surface2);color:var(--muted);font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;white-space:nowrap;cursor:pointer;${nameHeaderStyle};border-bottom:1px solid var(--border)" onclick="sortPicksByCol(${week},'name')">Participant${nameSortArrow}</th></tr></thead>
-          <tbody>${nameRows}${nameConsensusRow}</tbody>
-        </table>
-      </div>
-      <div style="overflow-x:auto;flex:1;min-width:0">
-        <table id="picks-table" class="picks-grid" style="border-collapse:collapse;font-size:12px;min-width:${games.length * 56}px">
-          <thead><tr>
-            ${headers.join('')}
-            ${tbHeader}
-            <th class="pts-col" style="cursor:pointer;${picksSort.col === null ? 'color:var(--accent)' : ''}" onclick="(function(){picksSort={col:null,dir:1};renderPicksTable(${week})})()">PTS${ptsArrow}</th>
-          </tr></thead>
-          <tbody>${rows}${consensusRow}</tbody>
-        </table>
-      </div>
-    </div>`;
+  const headerRow = `<tr>
+    <th class="name-col" style="cursor:pointer;${nameHeaderStyle}" onclick="sortPicksByCol(${week},'name')">Participant${nameSortArrow}</th>
+    ${headers.join('')}
+    ${tbHeader}
+    <th class="pts-col" style="cursor:pointer;${picksSort.col === null ? 'color:var(--accent)' : ''}" onclick="(function(){picksSort={col:null,dir:1};renderPicksTable(${week})})()">PTS${ptsArrow}</th>
+  </tr>`;
+
+  const target = document.getElementById('picks-table');
+  target.className = 'picks-grid';
+  target.style.minWidth = (weekGamesForPicks.length * 56 + 110) + 'px';
+  target.innerHTML = `<thead>${headerRow}</thead><tbody>${rows}${consensusRow}</tbody>`;
 }
 
 function renderDistribution(week) {
@@ -1578,8 +1572,9 @@ function renderDistribution(week) {
 
   const distGames = sheetGames[week] || sheetGames[String(week)] || games;
   const distFavs = sheetFavorites[week] || Array(13).fill(1);
+  const distDoubleGames = sheetDoubleGames[week] || [];
   document.getElementById('dist-content').innerHTML = distGames.map((g, gi) => {
-    const isDbl = (sheetDoubleGames[week] || []).includes(gi);
+    const isDbl = distDoubleGames.includes(gi);
     const favIdx = distFavs[gi] !== undefined ? distFavs[gi] : 1;       // 0 or 1 — which team is the favorite
     const dogIdx = 1 - favIdx;          // the other team
     const favTeam = g[favIdx];
@@ -1593,29 +1588,20 @@ function renderDistribution(week) {
     // Determine which side won (if results in)
     const favWon = res ? res[gi] === favIdx : null;
     const dogWon = res ? res[gi] === dogIdx : null;
+    const isUpset = res && dogWon;
 
-    // Majority side gets green, minority gets red (when results known, winner overrides)
-    let favBarColor, dogBarColor;
-    if (res) {
-      favBarColor = favWon ? '#34d399' : '#f87171';
-      dogBarColor = dogWon ? '#34d399' : '#f87171';
-    } else {
-      favBarColor = favPct >= dogPct ? '#34d399' : '#f87171';
-      dogBarColor = dogPct > favPct ? '#34d399' : '#f87171';
-    }
+    // Bar color always means the same thing — favorite side / underdog side — never flips based on outcome
+    const favBarColor = '#38bdf8';
+    const dogBarColor = '#a78bfa';
 
     const winnerLabel = res ? (favWon ? '✓ ' : '') : '';
     const loserLabel  = res ? (dogWon  ? '✓ ' : '') : '';
     const favTeamMarked = '<span style="border-bottom:2px solid var(--gold);padding-bottom:1px">' + favTeam + '</span>';
-    const isUpset = res && dogWon;
 
     return '<div class="dist-game">' +
       '<div class="dist-game-title">' +
         '<span>Game ' + (gi+1) + ': ' + favTeamMarked + ' vs ' + dogTeam + '</span>' +
-        '<span style="display:flex;gap:6px">' +
-          (isDbl ? '<span class="dist-double-badge">2 PTS</span>' : '') +
-          (isUpset ? '<span style="background:var(--red);color:#1a0505;font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;letter-spacing:.5px">⚡ UPSET</span>' : '') +
-        '</span>' +
+        (isDbl ? '<span class="dist-double-badge">2 PTS</span>' : '') +
       '</div>' +
       '<div class="dist-split-row">' +
         '<div class="dist-split-team fav-side">' +
@@ -1624,8 +1610,8 @@ function renderDistribution(week) {
         '</div>' +
         '<div class="dist-split-bar-wrap">' +
           '<div class="dist-split-bar" style="display:flex;height:28px;border-radius:6px;overflow:hidden;background:var(--surface2)">' +
-            '<div style="width:' + favPct + '%;background:' + favBarColor + ';display:flex;align-items:center;justify-content:flex-end;padding-right:6px;font-size:11px;font-weight:700;color:#000;min-width:' + (favPct > 0 ? '30px' : '0') + ';transition:width 0.5s ease">' + (favPct > 8 ? favPct + '%' : '') + '</div>' +
-            '<div style="width:' + dogPct + '%;background:' + dogBarColor + ';display:flex;align-items:center;justify-content:flex-start;padding-left:6px;font-size:11px;font-weight:700;color:#000;min-width:' + (dogPct > 0 ? '30px' : '0') + ';transition:width 0.5s ease">' + (dogPct > 8 ? dogPct + '%' : '') + '</div>' +
+            '<div style="width:' + favPct + '%;background:' + favBarColor + ';display:flex;align-items:center;justify-content:flex-end;padding-right:6px;font-size:11px;font-weight:700;color:#042c53;min-width:' + (favPct > 0 ? '30px' : '0') + ';transition:width 0.5s ease">' + (favPct > 8 ? favPct + '%' : '') + '</div>' +
+            '<div style="width:' + dogPct + '%;background:' + dogBarColor + ';display:flex;align-items:center;justify-content:flex-start;padding-left:6px;font-size:11px;font-weight:700;color:#26215c;min-width:' + (dogPct > 0 ? '30px' : '0') + ';transition:width 0.5s ease">' + (dogPct > 8 ? dogPct + '%' : '') + '</div>' +
           '</div>' +
         '</div>' +
         '<div class="dist-split-team dog-side">' +
@@ -1633,6 +1619,7 @@ function renderDistribution(week) {
           '<div class="dist-split-count">' + dogCount + ' picks</div>' +
         '</div>' +
       '</div>' +
+      (isUpset ? '<div style="margin-top:10px;background:rgba(248,113,113,0.1);border:1px solid var(--red);border-radius:6px;padding:6px 10px;font-size:11px;color:var(--red);font-weight:600">⚡ Upset &mdash; ' + dogTeam + '</div>' : '') +
     '</div>';
   }).join('');
 }
@@ -2063,8 +2050,32 @@ function saveResultsToSheet(week) {
   }, d => showToast(d ? '✓ Results saved to sheet' : '⚠️ Sheet save failed'));
 }
 
+function updateWeekBadge() {
+  const badge = document.getElementById('week-badge');
+  if (!badge) return;
+  const weeksWithGames = Array.from({length: WEEKS}, (_, i) => i + 1).filter(w => weekHasContent(w));
+  if (!weeksWithGames.length) {
+    badge.textContent = 'PRESEASON';
+    badge.style.background = 'var(--muted)';
+    badge.style.color = '#fff';
+    return;
+  }
+  const allComplete = weeksWithGames.length === WEEKS && weeksWithGames.every(w => hasResults(w));
+  if (allComplete) {
+    badge.textContent = 'SEASON COMPLETE';
+    badge.style.background = 'var(--gold)';
+    badge.style.color = '#1a0e00';
+    return;
+  }
+  const currentWeek = Math.max(...weeksWithGames);
+  badge.textContent = 'WEEK ' + currentWeek + ' LIVE';
+  badge.style.background = 'var(--green)';
+  badge.style.color = '#0a1a12';
+}
+
 function initApp() {
   loadPicksRevealed();
+  updateWeekBadge();
   renderStandings();
   renderPicks(CURRENT_WEEK);
   renderDistribution(CURRENT_WEEK);
