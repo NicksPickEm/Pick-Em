@@ -1114,7 +1114,9 @@ function renderRankTrendChart() {
     grid += `<text x="${xp(wi)}" y="${padT + chartH + 20}" fill="#64748b" font-size="11" text-anchor="middle">Wk${w}</text>`;
   });
 
-  let paths = '', dots = '', labels = '';
+  let paths = '', dots = '';
+  const startLabelItems = [];
+  const endLabelItems = [];
   rankTrendSelected.forEach((p, ci) => {
     const color = RANK_TREND_COLORS[ci % RANK_TREND_COLORS.length];
     const ranks = rankAtWeek[p] || [];
@@ -1132,10 +1134,27 @@ function renderRankTrendChart() {
     paths += `<path d="${d}" fill="none" stroke="${color}" stroke-width="2"/>`;
     const startRank = ranks[0];
     const endRank = ranks[W - 1];
-    const startY = yp(startRank);
-    const lastY = yp(endRank);
-    labels += `<text x="${padL - 6}" y="${startY + 4}" fill="${color}" font-size="10" font-weight="700" text-anchor="end">#${startRank}</text>`;
-    labels += `<text x="${svgW - padR + 8}" y="${lastY + 4}" fill="${color}" font-size="11" font-weight="700" style="cursor:pointer" onclick="openPlayer('${escName(p)}')"><tspan font-size="10" opacity="0.85">#${endRank}</tspan> ${p}</text>`;
+    startLabelItems.push({ y: yp(startRank), rank: startRank, color });
+    endLabelItems.push({ y: yp(endRank), rank: endRank, name: p, color });
+  });
+
+  // Spread labels apart vertically when players are close in rank — dots/lines above stay at their true position
+  function deconflictLabels(items, minGap) {
+    const sorted = [...items].sort((a, b) => a.y - b.y);
+    for (let i = 1; i < sorted.length; i++) {
+      if (sorted[i].y - sorted[i - 1].y < minGap) sorted[i].y = sorted[i - 1].y + minGap;
+    }
+    return sorted;
+  }
+  const startAdj = deconflictLabels(startLabelItems, 12);
+  const endAdj = deconflictLabels(endLabelItems, 14);
+
+  let labels = '';
+  startAdj.forEach(item => {
+    labels += `<text x="${padL - 6}" y="${item.y + 4}" fill="${item.color}" font-size="10" font-weight="700" text-anchor="end">#${item.rank}</text>`;
+  });
+  endAdj.forEach(item => {
+    labels += `<text x="${svgW - padR + 8}" y="${item.y + 4}" fill="${item.color}" font-size="11" font-weight="700" style="cursor:pointer" onclick="openPlayer('${escName(item.name)}')"><tspan font-size="10" opacity="0.85">#${item.rank}</tspan> ${item.name}</text>`;
   });
 
   container.innerHTML = `<svg width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}" style="display:block">${grid}${paths}${dots}${labels}</svg>`;
@@ -1679,7 +1698,8 @@ function renderCharts() {
         const color = val >= avg ? 'var(--accent)' : 'var(--muted)';
         const pct = Math.round((val/maxScore)*100);
         return '<div class="pure-bar-col">' +
-          '<div class="pure-bar-outer"><div class="pure-bar-inner" style="height:' + pct + '%;background:' + color + ';display:flex;align-items:flex-start;justify-content:center;padding-top:4px"><span style="font-family:Bebas Neue,sans-serif;font-size:13px;font-weight:700;color:' + (pct > 15 ? color : 'transparent') + '">' + val + '</span></div></div>' +
+          '<div class="pure-bar-val" style="color:' + color + '">' + val + '</div>' +
+          '<div class="pure-bar-outer"><div class="pure-bar-inner" style="height:' + pct + '%;background:' + color + '"></div></div>' +
           '<div class="pure-bar-label">Wk ' + completedWeeksAll[i] + '</div>' +
         '</div>';
       }).join('') +
